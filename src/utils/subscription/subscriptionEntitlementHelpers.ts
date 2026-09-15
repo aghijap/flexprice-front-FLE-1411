@@ -1,6 +1,7 @@
 import { EntitlementResponse } from '@/types/dto/Entitlement';
 import { SubscriptionEntitlementEffective, SubscriptionEntitlementFeature, SubscriptionEntitlementSource } from '@/types/dto/Subscription';
 import { JsonObject } from '@/types/common';
+import type { GrantOverrideFields } from '@/components/molecules/AddEntitlementDrawer/grantOverridePayload';
 
 export interface EnrichedSubscriptionEntitlement {
 	feature: SubscriptionEntitlementFeature['feature'];
@@ -113,7 +114,7 @@ export const enrichSubscriptionEntitlements = (
 	});
 };
 
-export interface SubscriptionEntitlementOverrideValues {
+export interface SubscriptionEntitlementOverrideValues extends GrantOverrideFields {
 	usage_limit?: number | null;
 	static_value?: string;
 	is_enabled?: boolean;

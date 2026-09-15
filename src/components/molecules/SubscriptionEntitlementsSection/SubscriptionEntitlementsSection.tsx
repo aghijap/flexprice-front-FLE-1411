@@ -5,7 +5,6 @@ import { Plus, Trash2, Pencil, Info } from 'lucide-react';
 import { Button, Card, CardHeader, Chip, Dialog, NoDataCard, Sheet } from '@/components/atoms';
 import { FlexpriceTable, ColumnData, AddEntitlementDrawer, EditSubscriptionEntitlementDrawer } from '@/components/molecules';
 import JsonCodeBlock from '@/components/molecules/Events/JsonCodeBlock';
-import GrantAllowanceMeter from './GrantAllowanceMeter';
 import { formatAggregatedAllowance, formatAllowanceValue, formatAllowanceReset } from '@/utils/entitlement/allowanceLabel';
 import type { SubscriptionEntitlementEffective } from '@/types/dto/Subscription';
 import SubscriptionApi from '@/api/SubscriptionApi';
@@ -416,12 +415,6 @@ const SubscriptionEntitlementsSection: FC<SubscriptionEntitlementsSectionProps> 
 		{
 			title: t('entitlements.overridesTable.columnValue'),
 			render: (row) => getEntitlementValue(row),
-		},
-		{
-			// Live allowance. Only grant-backed features have one; legacy rows render
-			// nothing rather than a misleading empty bar.
-			title: t('entitlements.grantState.columnUsage'),
-			render: (row) => <GrantAllowanceMeter state={row.grant_state} unitLabel={row.feature?.unit_plural as string | undefined} />,
 		},
 		{
 			title: '',

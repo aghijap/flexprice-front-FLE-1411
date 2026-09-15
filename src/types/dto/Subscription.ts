@@ -815,6 +815,8 @@ export interface EntitlementOverrideRequest {
 	grant_duration_unit?: ENTITLEMENT_GRANT_DURATION_UNIT;
 	grant_allocation_behavior?: ENTITLEMENT_GRANT_ALLOCATION_BEHAVIOR;
 	aggregation_mode?: ENTITLEMENT_AGGREGATION_MODE;
+	/** An allowance with no ceiling; requires a `subscription_period` duration. */
+	grant_unlimited?: boolean;
 }
 
 // =============================================================================

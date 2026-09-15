@@ -32,10 +32,18 @@ describe('toCreateEntitlementRequest', () => {
 		expect(req.grant_allocation_behavior).toBeUndefined();
 	});
 
-	it('omits grant_quota entirely for unlimited', () => {
+	it('states unlimited explicitly and omits the quota', () => {
+		// The API rejects grant config with an absent quota unless the intent is
+		// declared, so a dropped field cannot create a feature that never bills.
 		const req = toCreateEntitlementRequest({ ...metered, ...patchForMode('unlimited', {}) }, target);
+		expect(req.grant_unlimited).toBe(true);
 		expect(req.grant_quota).toBeUndefined();
 		expect(req.grant_duration_unit).toBe(ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD);
+	});
+
+	it('does not set the unlimited flag on a bounded allowance', () => {
+		const draft = { ...metered, ...patchForMode('period', {}), grant_quota: '500' };
+		expect(toCreateEntitlementRequest(draft, target).grant_unlimited).toBeUndefined();
 	});
 
 	it('never sends legacy quota fields for a metered feature', () => {

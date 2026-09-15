@@ -82,6 +82,12 @@ export interface CreateEntitlementRequest {
 	grant_duration_unit?: ENTITLEMENT_GRANT_DURATION_UNIT;
 	grant_allocation_behavior?: ENTITLEMENT_GRANT_ALLOCATION_BEHAVIOR;
 	aggregation_mode?: ENTITLEMENT_AGGREGATION_MODE;
+	/**
+	 * Asks for an allowance with no ceiling. Explicit rather than inferred from an
+	 * absent `grant_quota`, so a dropped field cannot silently create a feature
+	 * that never bills. Requires a `subscription_period` duration.
+	 */
+	grant_unlimited?: boolean;
 }
 
 export interface UpdateEntitlementRequest {
@@ -107,9 +113,15 @@ export interface UpdateEntitlementRequest {
 	grant_allocation_behavior?: ENTITLEMENT_GRANT_ALLOCATION_BEHAVIOR;
 	aggregation_mode?: ENTITLEMENT_AGGREGATION_MODE;
 	/**
-	 * @deprecated Being removed. Its only outcomes are an entitlement with no
-	 * ceiling — already expressible as a grant with `grant_quota` unset — or a
-	 * fall back to the legacy usage_limit model. Set the grant fields instead.
+	 * Clears a ceiling. Needed because an omitted `grant_quota` means "leave
+	 * alone" on update, so a bounded allowance could not otherwise become
+	 * unlimited. Setting it false requires `grant_quota` in the same request.
+	 */
+	grant_unlimited?: boolean;
+	/**
+	 * @deprecated Use `grant_unlimited` to remove a ceiling. This only remains for
+	 * the "back to a legacy usage_limit" case, which metered entitlements are
+	 * moving off entirely.
 	 */
 	clear_grant_config?: boolean;
 }

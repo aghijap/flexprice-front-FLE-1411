@@ -181,7 +181,7 @@ const CustomerUsageTable: FC<Props> = ({ data, allowRedirect = true }) => {
 									indicatorColor='bg-info'
 									backgroundColor='bg-info-line'
 								/>
-								<GrantWindowLedger state={row.grant_state} unitLabel={row.feature?.unit_plural} />
+								<GrantWindowLedger state={row.grant_state} unitLabel={row.feature?.unit_plural} featureName={row.feature?.name} />
 							</>
 						);
 					}
@@ -201,7 +201,7 @@ const CustomerUsageTable: FC<Props> = ({ data, allowRedirect = true }) => {
 								indicatorColor={indicatorColor}
 								backgroundColor={backgroundColor}
 							/>
-							<GrantWindowLedger state={row.grant_state} unitLabel={row.feature?.unit_plural} />
+							<GrantWindowLedger state={row.grant_state} unitLabel={row.feature?.unit_plural} featureName={row.feature?.name} />
 						</>
 					);
 				},

@@ -32,12 +32,55 @@ export const toAllowanceDraft = (entitlement: Partial<Entitlement>): Partial<Ent
 	aggregation_mode: entitlement.aggregation_mode,
 });
 
+/** True when the draft asks for no ceiling. */
+export const isUnlimitedDraft = (value: Partial<Entitlement>): boolean => value.grant_quota === null;
+
+/**
+ * Turning "no limit" on clears the quota and pins the window to the billing
+ * cycle — an unlimited hourly window would open hundreds of rows a month to
+ * track a balance that can never run out, and the API rejects it.
+ */
+export const setUnlimited = (
+	unlimited: boolean,
+	restoreUnit: ENTITLEMENT_GRANT_DURATION_UNIT = ENTITLEMENT_GRANT_DURATION_UNIT.DAY,
+): Partial<Entitlement> =>
+	unlimited
+		? {
+				grant_quota: null,
+				grant_duration_unit: ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD,
+				grant_duration_value: undefined,
+				grant_allocation_behavior: undefined,
+			}
+		: {
+				grant_quota: undefined,
+				grant_duration_unit: restoreUnit,
+				grant_duration_value: restoreUnit === ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD ? undefined : 1,
+				grant_allocation_behavior:
+					restoreUnit === ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD
+						? undefined
+						: ENTITLEMENT_GRANT_ALLOCATION_BEHAVIOR.FIRST_USAGE,
+			};
+
+/**
+ * Changing the refresh period. A cycle-length window carries neither a duration
+ * value nor an anchor, so both are cleared rather than left half-set.
+ */
+export const setPeriod = (value: Partial<Entitlement>, unit: ENTITLEMENT_GRANT_DURATION_UNIT): Partial<Entitlement> =>
+	unit === ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD
+		? { grant_duration_unit: unit, grant_duration_value: undefined, grant_allocation_behavior: undefined }
+		: {
+				grant_duration_unit: unit,
+				// The form offers a cadence, not a multiple of one: a window is always a
+				// single hour/day/week. Multi-unit windows stay an API-only shape.
+				grant_duration_value: 1,
+				grant_allocation_behavior: value.grant_allocation_behavior ?? ENTITLEMENT_GRANT_ALLOCATION_BEHAVIOR.FIRST_USAGE,
+			};
+
 /**
  * Unlimited is the absence of a ceiling. Within a draft, `null` means
  * deliberately unlimited and `undefined` means the field is simply empty — an
- * ordinary billing-period allowance not filled in yet. Conflating the two makes
- * the radio jump to Unlimited the moment "Once per billing period" is picked.
- * Loaded entities must pass through toAllowanceDraft first.
+ * ordinary billing-period allowance not filled in yet. Loaded entities must pass
+ * through toAllowanceDraft first.
  */
 export const deriveAllowanceMode = (value: Partial<Entitlement>): AllowanceMode => {
 	if (value.grant_duration_unit === ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD) {

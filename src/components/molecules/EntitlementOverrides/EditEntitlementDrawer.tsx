@@ -1,5 +1,5 @@
 import { FC, useEffect, useMemo, useState } from 'react';
-import { Sheet, Label, Input, Button, Checkbox, Chip } from '@/components/atoms';
+import { Dialog, Label, Input, Button, Checkbox, Chip } from '@/components/atoms';
 import { Switch } from '@/components/ui/switch';
 import { FEATURE_TYPE } from '@/models';
 import { EntitlementOverrideRequest } from '@/types/dto/Subscription';
@@ -10,7 +10,8 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { EnrichedEntitlementRow } from './EntitlementOverridesTable';
 import MeteredAllowanceFields, { type MeteredAllowanceErrors } from '@/components/molecules/AddEntitlementDrawer/MeteredAllowanceFields';
-import { deriveAllowanceMode, toAllowanceDraft } from '@/components/molecules/AddEntitlementDrawer/allowanceMode';
+import { toAllowanceDraft } from '@/components/molecules/AddEntitlementDrawer/allowanceMode';
+import { toGrantOverrideFields } from '@/components/molecules/AddEntitlementDrawer/grantOverridePayload';
 import { Entitlement, hasGrantConfig } from '@/models/Entitlement';
 import { formatAllowanceValue, formatAllowanceReset } from '@/utils/entitlement/allowanceLabel';
 
@@ -70,18 +71,11 @@ const EditEntitlementDrawer: FC<EditEntitlementDrawerProps> = ({ isOpen, onOpenC
 		};
 
 		if (entitlement.feature_type === FEATURE_TYPE.METERED && isGrantBacked) {
-			const mode = deriveAllowanceMode(grantDraft);
-			if (mode !== 'unlimited' && (grantDraft.grant_quota == null || grantDraft.grant_quota === '')) {
+			if (toGrantOverrideFields(grantDraft) == null) {
 				setGrantErrors({ grant_quota: t('entitlements.validation.allowanceRequired') });
 				return;
 			}
-			override.grant_measure = grantDraft.grant_measure ?? undefined;
-			// null (unlimited) must reach the API as an absent field, not a value.
-			override.grant_quota = grantDraft.grant_quota ?? undefined;
-			override.grant_duration_value = grantDraft.grant_duration_value ?? undefined;
-			override.grant_duration_unit = grantDraft.grant_duration_unit;
-			override.grant_allocation_behavior = grantDraft.grant_allocation_behavior;
-			override.aggregation_mode = grantDraft.aggregation_mode;
+			Object.assign(override, toGrantOverrideFields(grantDraft));
 		} else if (entitlement.feature_type === FEATURE_TYPE.METERED) {
 			if (isInfinite) {
 				override.usage_limit = null;
@@ -178,13 +172,13 @@ const EditEntitlementDrawer: FC<EditEntitlementDrawerProps> = ({ isOpen, onOpenC
 					: '');
 
 	return (
-		<Sheet
+		<Dialog
 			isOpen={isOpen}
 			onOpenChange={handleOpenChange}
 			title={t('entitlements.editDrawer.title', { name: featureName })}
 			description={t('entitlements.editDrawer.description')}
-			size='md'>
-			<div className='flex flex-col gap-6 p-6'>
+			className='w-full max-w-3xl'>
+			<div className='flex flex-col gap-6'>
 				<div className='space-y-2'>
 					<Label label={t('entitlements.editDrawer.featureType')} />
 					<div>{getFeatureTypeChip(entitlement.feature_type)}</div>
@@ -292,7 +286,7 @@ const EditEntitlementDrawer: FC<EditEntitlementDrawerProps> = ({ isOpen, onOpenC
 					<Button onClick={handleSave}>{t('entitlements.editDrawer.saveOverride')}</Button>
 				</div>
 			</div>
-		</Sheet>
+		</Dialog>
 	);
 };
 

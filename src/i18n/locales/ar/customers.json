@@ -204,11 +204,16 @@
 			"usageProgressUnlimited": "{{usage}} / غير محدود"
 		},
 		"fallback": "--",
-		"windowsTitle": "Allowance windows this cycle",
+		"windowsTitle": "Value windows this cycle",
 		"windowsToggle": "{{count}} windows",
 		"windowOverage": "over by {{amount}}",
 		"windowNone": "—",
-		"windowOpen": "open"
+		"windowOpen": "open",
+		"windowsButton": "السجل",
+		"windowReplaced": "مُستبدَلة",
+		"windowsDialogDescription": "تُقاس كل نافذة وتُفوتر على حدة.",
+		"windowsColumnPeriod": "النافذة",
+		"windowsColumnUsage": "المستخدم"
 	},
 	"subscriptionCreate": {
 		"selectCustomerLabel": "العميل",

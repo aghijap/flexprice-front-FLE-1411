@@ -47,6 +47,8 @@ export enum ENTITLEMENT_AGGREGATION_MODE {
 export enum ENTITLEMENT_GRANT_STATUS {
 	ACTIVE = 'active',
 	EXHAUSTED = 'exhausted',
+	/** Replaced by a later window after the entitlement was edited; never billed. */
+	SUPERSEDED = 'superseded',
 }
 
 export enum ENTITLEMENT_ENTITY_TYPE {

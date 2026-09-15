@@ -1,8 +1,8 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import MeteredAllowanceFields from './MeteredAllowanceFields';
-import { deriveAllowanceMode, patchForMode, toAllowanceDraft } from './allowanceMode';
-import { ENTITLEMENT_GRANT_DURATION_UNIT, ENTITLEMENT_GRANT_MEASURE } from '@/models/Entitlement';
+import { deriveAllowanceMode, isUnlimitedDraft, patchForMode, setPeriod, setUnlimited, toAllowanceDraft } from './allowanceMode';
+import { Entitlement, ENTITLEMENT_GRANT_DURATION_UNIT, ENTITLEMENT_GRANT_MEASURE } from '@/models/Entitlement';
 
 vi.mock('react-i18next', () => ({
 	useTranslation: () => ({ t: (key: string) => key }),
@@ -87,5 +87,65 @@ describe('review regressions', () => {
 
 		const back = patchForMode('recurring', { ...period, grant_duration_unit: ENTITLEMENT_GRANT_DURATION_UNIT.HOUR });
 		expect(back.grant_duration_unit).toBe(ENTITLEMENT_GRANT_DURATION_UNIT.HOUR);
+	});
+});
+
+describe('no-limit checkbox', () => {
+	it('pins the window to the billing cycle while checked', () => {
+		const unlimited = setUnlimited(true);
+		expect(isUnlimitedDraft(unlimited)).toBe(true);
+		expect(unlimited.grant_duration_unit).toBe(ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD);
+		expect(deriveAllowanceMode(unlimited)).toBe('unlimited');
+	});
+
+	it('restores the last recurring unit when unchecked', () => {
+		// Unchecking must not silently drop the customer back to a daily window
+		// when they had configured an hourly one before ticking the box.
+		const restored = setUnlimited(false, ENTITLEMENT_GRANT_DURATION_UNIT.HOUR);
+		expect(isUnlimitedDraft(restored)).toBe(false);
+		expect(restored.grant_duration_unit).toBe(ENTITLEMENT_GRANT_DURATION_UNIT.HOUR);
+		expect(restored.grant_duration_value).toBe(1);
+		expect(deriveAllowanceMode(restored)).toBe('recurring');
+	});
+
+	it('clears the duration when the period select picks the billing cycle', () => {
+		const cycle = setPeriod({ grant_duration_value: 6 }, ENTITLEMENT_GRANT_DURATION_UNIT.SUBSCRIPTION_PERIOD);
+		expect(cycle.grant_duration_value).toBeUndefined();
+		expect(cycle.grant_allocation_behavior).toBeUndefined();
+	});
+});
+
+// An edit the running window cannot be re-cut for waits for that window to end.
+// Without a word on the form you save, nothing moves, and it reads as broken.
+describe('deferred-change note', () => {
+	const liveWindow = { valid_to: '2026-09-16T21:53:00Z', usage: '400' };
+
+	const renderWith = (value: Partial<Entitlement>, saved: Partial<Entitlement>) =>
+		render(<MeteredAllowanceFields value={value} onChange={vi.fn()} unitLabel='calls' savedValue={saved} liveWindow={liveWindow} />);
+
+	it('warns when the cadence changed', () => {
+		const saved = patchForMode('recurring', {});
+		const { container } = renderWith({ ...saved, grant_duration_unit: ENTITLEMENT_GRANT_DURATION_UNIT.HOUR }, saved);
+		expect(container.textContent).toContain('entitlements.addDrawer.deferredCadence');
+	});
+
+	it('warns when the value is below what the window already used', () => {
+		const saved = { ...patchForMode('recurring', {}), grant_quota: '1000' };
+		const { container } = renderWith({ ...saved, grant_quota: '100' }, saved);
+		expect(container.textContent).toContain('entitlements.addDrawer.deferredCut');
+	});
+
+	it('stays quiet for a raise, which applies immediately', () => {
+		const saved = { ...patchForMode('recurring', {}), grant_quota: '1000' };
+		const { container } = renderWith({ ...saved, grant_quota: '5000' }, saved);
+		expect(container.textContent).not.toContain('deferred');
+	});
+
+	it('stays quiet with no live window — nothing to wait for', () => {
+		const saved = { ...patchForMode('recurring', {}), grant_quota: '1000' };
+		const { container } = render(
+			<MeteredAllowanceFields value={{ ...saved, grant_quota: '100' }} onChange={vi.fn()} unitLabel='calls' savedValue={saved} />,
+		);
+		expect(container.textContent).not.toContain('deferred');
 	});
 });

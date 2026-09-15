@@ -31,15 +31,18 @@ export const toCreateEntitlementRequest = (entitlement: Partial<Entitlement>, ta
 
 	if (entitlement.feature_type !== FEATURE_TYPE.METERED) return base;
 
+	// null is the draft's marker for "deliberately unlimited". The API wants the
+	// quota absent AND an explicit flag, so that a dropped field cannot create a
+	// feature that never bills.
+	const unlimited = entitlement.grant_quota === null;
+
 	return {
 		...base,
 		// HasGrantConfig() on the server trips on ANY grant field, so a config
 		// missing only its measure is rejected outright. Default the two fields the
 		// form shows but the user may never touch.
 		grant_measure: entitlement.grant_measure ?? ENTITLEMENT_GRANT_MEASURE.QUANTITY,
-		// null means "deliberately unlimited" and must reach the API as an absent
-		// field; undefined means the user never filled it in and validation stops
-		// the submit before this point.
+		grant_unlimited: unlimited || undefined,
 		grant_quota: entitlement.grant_quota ?? undefined,
 		grant_duration_value: entitlement.grant_duration_value ?? undefined,
 		grant_duration_unit: entitlement.grant_duration_unit,
