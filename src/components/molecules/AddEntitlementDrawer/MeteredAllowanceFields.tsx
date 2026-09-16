@@ -132,7 +132,6 @@ const MeteredAllowanceFields: FC<Props> = ({ value, onChange, errors, unitLabel,
 			value.aggregation_mode !== savedValue.aggregation_mode;
 
 		return reshaped ? t('entitlements.addDrawer.deferredCadence', { when }) : null;
-		 
 	}, [savedValue, liveWindow, value, unlimited, valueUnit, t]);
 
 	// A caption, not a banner: one line about what this config produces, and only

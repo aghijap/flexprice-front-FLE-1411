@@ -6,10 +6,11 @@ import { AddChargesButton } from '@/components/organisms/PlanForm/SetupChargesSe
 import MeteredAllowanceFields from './MeteredAllowanceFields';
 import { deriveAllowanceMode, patchForMode } from './allowanceMode';
 import { toCreateEntitlementRequest } from './entitlementRequest';
+import { blocksAnotherEntitlement } from './parallelEntitlements';
 import { formatAllowanceValue } from '@/utils/entitlement/allowanceLabel';
 
 import { refetchQueries } from '@/core/services/tanstack/ReactQueryProvider';
-import { Entitlement, ENTITLEMENT_ENTITY_TYPE } from '@/models/Entitlement';
+import { Entitlement, ENTITLEMENT_AGGREGATION_MODE, ENTITLEMENT_ENTITY_TYPE } from '@/models/Entitlement';
 import Feature, { FEATURE_TYPE } from '@/models/Feature';
 import EntitlementApi from '@/api/EntitlementApi';
 import FeatureApi from '@/api/FeatureApi';
@@ -278,7 +279,19 @@ const AddEntitlementDrawer: FC<Props> = ({
 	const featureForForm = fullFeature ?? activeFeature;
 
 	// Memoize existing feature IDs to prevent unnecessary recalculations
-	const existingFeatureIds = useMemo(() => initialEntitlements?.map((ent) => ent.feature_id) || [], [initialEntitlements]);
+	const existingFeatureIds = useMemo(
+		() => (initialEntitlements ?? []).filter(blocksAnotherEntitlement).map((ent) => ent.feature_id) as string[],
+		[initialEntitlements],
+	);
+
+	// Features already carrying a parallel entitlement: a second one has to match,
+	// since a feature's entitlements are either all additive or all parallel.
+	const parallelFeatureIds = useMemo(() => {
+		const existing = (initialEntitlements ?? []).filter((ent) => !blocksAnotherEntitlement(ent)).map((ent) => ent.feature_id);
+		const drafted = entitlements.filter((ent) => !blocksAnotherEntitlement(ent)).map((ent) => ent.feature_id);
+		return new Set([...existing, ...drafted].filter(Boolean) as string[]);
+		 
+	}, [initialEntitlements, entitlements]);
 
 	// Reset all states when drawer closes
 	const resetState = useCallback(() => {
@@ -293,8 +306,12 @@ const AddEntitlementDrawer: FC<Props> = ({
 
 	// Memoize already added feature IDs (from entitlements + initial entitlements)
 	const alreadyAddedFeatureIds = useMemo(() => {
-		const currentEntitlementFeatureIds = entitlements.map((ent) => ent.feature_id).filter(Boolean) as string[];
-		return [...new Set([...currentEntitlementFeatureIds, ...existingFeatureIds])];
+		const drafted = entitlements
+			.filter(blocksAnotherEntitlement)
+			.map((ent) => ent.feature_id)
+			.filter(Boolean) as string[];
+		return [...new Set([...drafted, ...existingFeatureIds])];
+		 
 	}, [entitlements, existingFeatureIds]);
 
 	const handleDrawerClose = (open: boolean) => {
@@ -498,7 +515,15 @@ const AddEntitlementDrawer: FC<Props> = ({
 									// Seed the grant defaults the form already displays. Without this the
 									// state holds only what the user touched, so typing a quota produces a
 									// partial config (no measure) that the API rejects.
-									setTempEntitlement(feature.type === FEATURE_TYPE.METERED ? patchForMode('recurring', {}) : {});
+									setTempEntitlement(
+										feature.type === FEATURE_TYPE.METERED
+											? {
+													...patchForMode('recurring', {}),
+													// Match the siblings, or the API rejects a mixed feature.
+													...(parallelFeatureIds.has(feature.id) ? { aggregation_mode: ENTITLEMENT_AGGREGATION_MODE.PARALLEL } : {}),
+												}
+											: {},
+									);
 									setSelectedFeatures((prev) => [...prev, feature]);
 									setShowSelect(false);
 									setErrors({});
