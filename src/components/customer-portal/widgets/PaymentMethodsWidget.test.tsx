@@ -253,7 +253,7 @@ describe('PaymentMethodsWidget', () => {
 		expect(container.querySelector('svg')).toBeInTheDocument();
 	});
 
-	it('renders provider filter tabs and badges when multiple providers are connected', async () => {
+	it('renders provider filter dropdown and badges when multiple providers are connected', async () => {
 		vi.mocked(CustomerPortalApi.getIntegrations).mockResolvedValue({
 			payment_integrations: [
 				{
@@ -279,24 +279,28 @@ describe('PaymentMethodsWidget', () => {
 		expect(await screen.findByText('visa •••• 4242')).toBeInTheDocument();
 		expect(screen.getByText('mastercard •••• 5555')).toBeInTheDocument();
 
-		// Check tabs exist
-		expect(screen.getByRole('button', { name: /^All\s+\(2\)$/i })).toBeInTheDocument();
-		const stripeTab = screen.getByRole('button', { name: /^Stripe\s+\(1\)$/i });
-		const chargebeeTab = screen.getByRole('button', { name: /^Chargebee\s+\(1\)$/i });
-		expect(stripeTab).toBeInTheDocument();
-		expect(chargebeeTab).toBeInTheDocument();
+		// Check filter dropdown trigger exists to the left of Add card
+		const filterTrigger = screen.getByRole('button', { name: /^All providers\s+\(2\)$/i });
+		expect(filterTrigger).toBeInTheDocument();
 
-		// Check provider badges
+		// Check provider badges on cards
 		expect(screen.getByText('Stripe')).toBeInTheDocument();
 		expect(screen.getByText('Chargebee')).toBeInTheDocument();
 
-		// Click on Stripe filter tab
-		await userEvent.click(stripeTab);
+		// Open filter dropdown and select Stripe
+		await userEvent.click(filterTrigger);
+		const menu = await screen.findByRole('menu');
+		await userEvent.click(within(menu).getByRole('menuitem', { name: /^Stripe\s+\(1\)$/i }));
+
 		expect(screen.getByText('visa •••• 4242')).toBeInTheDocument();
 		expect(screen.queryByText('mastercard •••• 5555')).not.toBeInTheDocument();
 
-		// Click on Chargebee filter tab
-		await userEvent.click(chargebeeTab);
+		// Open filter dropdown and select Chargebee
+		const stripeTrigger = screen.getByRole('button', { name: /^Stripe\s+\(1\)$/i });
+		await userEvent.click(stripeTrigger);
+		const menu2 = await screen.findByRole('menu');
+		await userEvent.click(within(menu2).getByRole('menuitem', { name: /^Chargebee\s+\(1\)$/i }));
+
 		expect(screen.queryByText('visa •••• 4242')).not.toBeInTheDocument();
 		expect(screen.getByText('mastercard •••• 5555')).toBeInTheDocument();
 	});
@@ -326,8 +330,12 @@ describe('PaymentMethodsWidget', () => {
 		// Wait for methods to load
 		expect(await screen.findByText('visa •••• 4242')).toBeInTheDocument();
 
-		// Filter to Stripe
-		await userEvent.click(screen.getByRole('button', { name: /^Stripe/i }));
+		// Open filter dropdown and select Stripe
+		const filterTrigger = screen.getByRole('button', { name: /^All providers\s+\(1\)$/i });
+		await userEvent.click(filterTrigger);
+		const menu = await screen.findByRole('menu');
+		await userEvent.click(within(menu).getByRole('menuitem', { name: /^Stripe\s+\(0\)$/i }));
+
 		expect(screen.getByText('No Stripe cards')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /Add card \(Stripe\)/i })).toBeInTheDocument();
 	});

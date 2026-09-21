@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
-import { AlertTriangle, CreditCard, MoreHorizontal, Plus, Star, Trash2 } from 'lucide-react';
+import { AlertTriangle, ChevronDown, CreditCard, MoreHorizontal, Plus, Star, Trash2 } from 'lucide-react';
 import CustomerPortalApi from '@/api/CustomerPortalApi';
 import { portalReturnUrl } from '../portalReturnUrl';
 import { Button, Chip, Dialog } from '@/components/atoms';
@@ -16,7 +16,6 @@ import CheckoutLinkDialog from './CheckoutLinkDialog';
 import EmptyState from '../EmptyState';
 import PortalSection from '../PortalSection';
 import PortalRow, { PortalRows } from '../PortalRow';
-import { cn } from '@/lib/utils';
 
 interface PaymentMethodsWidgetProps {
 	label?: string;
@@ -240,13 +239,66 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 		return null;
 	};
 
+	const renderFilterDropdown = () => {
+		if (!canManage || manageProviders.length <= 1) {
+			return null;
+		}
+
+		const currentLabel =
+			selectedFilter === 'all'
+				? `${t('paymentMethods.allProviders', 'All providers')} (${totalCount})`
+				: `${t(`paymentProviders.${selectedFilter}`, selectedFilter)} (${groups.find((g) => g.provider === selectedFilter)?.items.length ?? 0})`;
+
+		return (
+			<DropdownMenu
+				align='end'
+				trigger={
+					<Button
+						variant='outline'
+						size='sm'
+						className='h-8 text-xs font-normal text-content-secondary hover:text-content'
+						suffixIcon={<ChevronDown className='size-3.5 opacity-70' />}>
+						{currentLabel}
+					</Button>
+				}
+				options={[
+					{
+						label: `${t('paymentMethods.allProviders', 'All providers')} (${totalCount})`,
+						onSelect: () => setSelectedFilter('all'),
+					},
+					...manageProviders.map((provider) => {
+						const count = groups.find((g) => g.provider === provider)?.items.length ?? 0;
+						return {
+							label: `${t(`paymentProviders.${provider}`, provider)} (${count})`,
+							onSelect: () => setSelectedFilter(provider),
+						};
+					}),
+				]}
+			/>
+		);
+	};
+
+	const renderHeaderActions = () => {
+		const filterDropdown = renderFilterDropdown();
+		const addButton = renderAddButton();
+
+		if (!filterDropdown && !addButton) return null;
+
+		return (
+			<div className='flex items-center gap-2'>
+				{filterDropdown}
+				{addButton}
+			</div>
+		);
+	};
+
 	return (
 		<PortalSection
 			flush
 			icon={<CreditCard />}
 			title={label ?? t('paymentMethods.title')}
 			description={t('paymentMethods.description')}
-			action={renderAddButton()}>
+			action={renderHeaderActions()}>
 			<CheckoutLinkDialog url={setupUrl} purpose='setup' onOpenChange={(open) => !open && setSetupUrl(null)} />
 			<Dialog
 				isOpen={pendingDelete !== null}
@@ -262,40 +314,6 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 					</Button>
 				</div>
 			</Dialog>
-
-			{canManage && manageProviders.length > 1 && (
-				<div className='flex items-center gap-2 border-b border-line px-5 py-2.5 bg-surface-subtle/30'>
-					<button
-						type='button'
-						onClick={() => setSelectedFilter('all')}
-						className={cn(
-							'px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer',
-							selectedFilter === 'all'
-								? 'bg-surface text-content border-line shadow-xs font-semibold'
-								: 'text-content-secondary border-transparent hover:text-content hover:bg-surface/60'
-						)}>
-						{t('paymentMethods.all')} {totalCount > 0 && `(${totalCount})`}
-					</button>
-					{manageProviders.map((provider) => {
-						const count = groups.find((g) => g.provider === provider)?.items.length ?? 0;
-						const isSelected = selectedFilter === provider;
-						return (
-							<button
-								key={provider}
-								type='button'
-								onClick={() => setSelectedFilter(provider)}
-								className={cn(
-									'px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer',
-									isSelected
-										? 'bg-surface text-content border-line shadow-xs font-semibold'
-										: 'text-content-secondary border-transparent hover:text-content hover:bg-surface/60'
-								)}>
-								{t(`paymentProviders.${provider}`, provider)} {count > 0 && `(${count})`}
-							</button>
-						);
-					})}
-				</div>
-			)}
 
 			{isLoading || integrationsLoading ? (
 				<div className='animate-pulse space-y-3 px-5 py-4'>
