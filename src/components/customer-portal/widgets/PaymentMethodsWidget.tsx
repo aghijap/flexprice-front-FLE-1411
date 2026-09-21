@@ -16,6 +16,7 @@ import CheckoutLinkDialog from './CheckoutLinkDialog';
 import EmptyState from '../EmptyState';
 import PortalSection from '../PortalSection';
 import PortalRow, { PortalRows } from '../PortalRow';
+import { cn } from '@/lib/utils';
 
 interface PaymentMethodsWidgetProps {
 	label?: string;
@@ -39,8 +40,6 @@ const MethodRow = ({ method, canSetDefault, onSetDefault, onDelete, isBusy }: Me
 	const { t } = useTranslation('customer-portal');
 	const expiry = formatExpiry(method.card?.exp_month, method.card?.exp_year);
 	const isExpired = method.status === 'EXPIRED';
-	// Names the method without leaking the gateway — used for the visible title and
-	// for the row menu's accessible name, so the two cannot drift.
 	const described = method.card?.last4
 		? t('paymentMethods.cardLabel', { brand: method.card.brand ?? 'card', last4: method.card.last4 })
 		: method.id;
@@ -54,6 +53,7 @@ const MethodRow = ({ method, canSetDefault, onSetDefault, onDelete, isBusy }: Me
 				<>
 					{isExpired && <Chip label={t('paymentMethods.expired')} variant='failed' />}
 					{method.is_default && <Chip label={t('paymentMethods.default')} variant='success' />}
+					<Chip label={t(`paymentProviders.${method.provider}`, method.provider)} variant='default' />
 					<DropdownMenu
 						align='end'
 						trigger={
@@ -69,8 +69,6 @@ const MethodRow = ({ method, canSetDefault, onSetDefault, onDelete, isBusy }: Me
 								label: t('paymentMethods.setDefault'),
 								icon: <Star className='w-4 h-4' />,
 								disabled: method.is_default || !canSetDefault || isExpired || isBusy,
-								// Kept visible and explained rather than hidden: a missing item leaves
-								// the customer wondering whether the portal can do this at all.
 								disabledReason: method.is_default
 									? t('paymentMethods.alreadyDefault')
 									: !canSetDefault
@@ -113,11 +111,7 @@ const ProviderGroup = ({ group, children }: { group: ProviderSavedPaymentMethods
 };
 
 /**
- * Saved payment methods, grouped by provider.
- *
- * Gateway names are never shown — the portal reads as Flexprice handling payments
- * regardless of what is behind it — but methods stay grouped because defaults and
- * deletes are scoped per provider, so both operations need to carry one.
+ * Saved payment methods, with provider tabs and attribution.
  */
 const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	const { t } = useTranslation('customer-portal');
@@ -130,12 +124,12 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	} = usePortalIntegrations();
 	const [pendingDelete, setPendingDelete] = useState<SavedPaymentMethod | null>(null);
 	const [setupUrl, setSetupUrl] = useState<string | null>(null);
+	const [selectedFilter, setSelectedFilter] = useState<PaymentGatewayType | 'all'>('all');
 	const queryClient = useQueryClient();
 
 	const canManage = supports('payment_method_management');
-	// Capability is per provider: in a mixed-provider portal a global flag would
-	// offer Set as default on a provider that cannot do it, and the call would fail.
 	const setDefaultProviders = providersFor('set_default_method');
+	const manageProviders = providersFor('payment_method_management');
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: portalPaymentMethodsQueryKey,
@@ -147,18 +141,11 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 		mutationFn: (provider: PaymentGatewayType) =>
 			CustomerPortalApi.addPaymentMethod({
 				payment_provider: provider,
-				success_url: portalReturnUrl(),
-				cancel_url: portalReturnUrl(),
+				success_url: portalReturnUrl(provider),
+				cancel_url: portalReturnUrl(provider),
 			}),
 		onSuccess: async (response) => {
-			// A provider that vaults server-to-server returns type 'none' — there is
-			// nothing to redirect to, so refresh instead of waiting for a return trip.
 			if (response.action.type === 'redirect' && response.action.url) {
-				// A new tab, not this one: navigating away would unmount the portal, so a
-				// customer who abandons the provider's page has nothing to come back to.
-				// The link is shown as well, because the open runs in an async callback
-				// rather than the click and a popup blocker can stop it. Both paths refuse
-				// a non-http(s) scheme — the URL is an unconstrained API string.
 				setSetupUrl(response.action.url);
 				openPaymentUrl(response.action.url);
 				return;
@@ -174,8 +161,6 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 			CustomerPortalApi.setDefaultPaymentMethod({ payment_provider: method.provider, payment_method_id: method.id }),
 		onSuccess: (updated) => {
 			toast.success(t('paymentMethods.defaultUpdated'));
-			// The response is the gateway re-read after the write, so refetching here
-			// would only ask the same question twice.
 			queryClient.setQueryData(portalPaymentMethodsQueryKey, updated);
 		},
 		onError: (error: Error) => toast.error(error.message || t('errors.setDefaultPaymentMethod')),
@@ -193,12 +178,11 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	});
 
 	const groups = data?.providers ?? [];
-	const hasAnyMethod = groups.some((group) => group.items.length > 0);
+	const totalCount = groups.reduce((acc, g) => acc + g.items.length, 0);
+	const hasAnyMethod = totalCount > 0;
 	const isBusy = isSettingDefault || isDeleting;
-	const addProvider = defaultProviderFor('payment_method_management');
+	const defaultAddProvider = defaultProviderFor('payment_method_management');
 
-	// An integrations failure is not the same as a provider that cannot manage
-	// methods — saying "not available" would state something we do not know.
 	if (integrationsError) {
 		return (
 			<PortalSection icon={<CreditCard />} title={label ?? t('paymentMethods.title')}>
@@ -219,19 +203,50 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 		);
 	}
 
+	const renderAddButton = () => {
+		if (selectedFilter !== 'all') {
+			return (
+				<Button size='sm' onClick={() => addMethod(selectedFilter)} isLoading={isAdding} prefixIcon={<Plus />}>
+					{t('paymentMethods.add')}
+				</Button>
+			);
+		}
+
+		if (manageProviders.length > 1) {
+			return (
+				<DropdownMenu
+					align='end'
+					trigger={
+						<Button size='sm' isLoading={isAdding} prefixIcon={<Plus />}>
+							{t('paymentMethods.add')}
+						</Button>
+					}
+					options={manageProviders.map((provider) => ({
+						label: t('paymentMethods.addForProvider', { provider: t(`paymentProviders.${provider}`, provider) }),
+						onSelect: () => addMethod(provider),
+					}))}
+				/>
+			);
+		}
+
+		if (defaultAddProvider) {
+			return (
+				<Button size='sm' onClick={() => addMethod(defaultAddProvider)} isLoading={isAdding} prefixIcon={<Plus />}>
+					{t('paymentMethods.add')}
+				</Button>
+			);
+		}
+
+		return null;
+	};
+
 	return (
 		<PortalSection
 			flush
 			icon={<CreditCard />}
 			title={label ?? t('paymentMethods.title')}
 			description={t('paymentMethods.description')}
-			action={
-				addProvider ? (
-					<Button size='sm' onClick={() => addMethod(addProvider)} isLoading={isAdding} prefixIcon={<Plus />}>
-						{t('paymentMethods.add')}
-					</Button>
-				) : undefined
-			}>
+			action={renderAddButton()}>
 			<CheckoutLinkDialog url={setupUrl} purpose='setup' onOpenChange={(open) => !open && setSetupUrl(null)} />
 			<Dialog
 				isOpen={pendingDelete !== null}
@@ -248,6 +263,40 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 				</div>
 			</Dialog>
 
+			{canManage && manageProviders.length > 1 && (
+				<div className='flex items-center gap-2 border-b border-line px-5 py-2.5 bg-surface-subtle/30'>
+					<button
+						type='button'
+						onClick={() => setSelectedFilter('all')}
+						className={cn(
+							'px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer',
+							selectedFilter === 'all'
+								? 'bg-surface text-content border-line shadow-xs font-semibold'
+								: 'text-content-secondary border-transparent hover:text-content hover:bg-surface/60'
+						)}>
+						{t('paymentMethods.all')} {totalCount > 0 && `(${totalCount})`}
+					</button>
+					{manageProviders.map((provider) => {
+						const count = groups.find((g) => g.provider === provider)?.items.length ?? 0;
+						const isSelected = selectedFilter === provider;
+						return (
+							<button
+								key={provider}
+								type='button'
+								onClick={() => setSelectedFilter(provider)}
+								className={cn(
+									'px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors cursor-pointer',
+									isSelected
+										? 'bg-surface text-content border-line shadow-xs font-semibold'
+										: 'text-content-secondary border-transparent hover:text-content hover:bg-surface/60'
+								)}>
+								{t(`paymentProviders.${provider}`, provider)} {count > 0 && `(${count})`}
+							</button>
+						);
+					})}
+				</div>
+			)}
+
 			{isLoading || integrationsLoading ? (
 				<div className='animate-pulse space-y-3 px-5 py-4'>
 					{[1, 2].map((i) => (
@@ -256,6 +305,41 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 				</div>
 			) : isError ? (
 				<EmptyState icon={<AlertTriangle />} title={t('errors.loadPaymentMethods')} description={t('paymentMethods.retryHint')} />
+			) : selectedFilter !== 'all' ? (
+				(() => {
+					const activeGroup = groups.find((g) => g.provider === selectedFilter);
+					if (activeGroup?.error) {
+						return <ProviderGroup group={activeGroup}>{null}</ProviderGroup>;
+					}
+					if (!activeGroup || activeGroup.items.length === 0) {
+						const providerName = t(`paymentProviders.${selectedFilter}`, selectedFilter);
+						return (
+							<EmptyState
+								icon={<CreditCard />}
+								title={t('paymentMethods.providerEmptyTitle', { provider: providerName })}
+								description={t('paymentMethods.providerEmptyDescription', { provider: providerName })}
+								action={{
+									label: t('paymentMethods.addForProvider', { provider: providerName }),
+									onClick: () => addMethod(selectedFilter),
+								}}
+							/>
+						);
+					}
+					return (
+						<PortalRows>
+							{activeGroup.items.map((method) => (
+								<MethodRow
+									key={`${activeGroup.provider}:${method.id}`}
+									method={method}
+									canSetDefault={setDefaultProviders.includes(activeGroup.provider)}
+									onSetDefault={setDefault}
+									onDelete={setPendingDelete}
+									isBusy={isBusy}
+								/>
+							))}
+						</PortalRows>
+					);
+				})()
 			) : hasAnyMethod || groups.some((g) => g.error) ? (
 				<PortalRows>
 					{groups.map((group) => (

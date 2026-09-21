@@ -252,4 +252,83 @@ describe('PaymentMethodsWidget', () => {
 		await screen.findByText(/no payment methods|not available/i);
 		expect(container.querySelector('svg')).toBeInTheDocument();
 	});
+
+	it('renders provider filter tabs and badges when multiple providers are connected', async () => {
+		vi.mocked(CustomerPortalApi.getIntegrations).mockResolvedValue({
+			payment_integrations: [
+				{
+					provider: 'stripe',
+					capabilities: [{ type: 'payment_method_management', is_default: true }],
+				},
+				{
+					provider: 'chargebee',
+					capabilities: [{ type: 'payment_method_management', is_default: false }],
+				},
+			],
+		} as never);
+		vi.mocked(CustomerPortalApi.getPaymentMethods).mockResolvedValue({
+			providers: [
+				{ provider: 'stripe', items: [card({ id: 'pm_stripe', provider: 'stripe', card: { brand: 'visa', last4: '4242' } })] },
+				{ provider: 'chargebee', items: [card({ id: 'pm_cb', provider: 'chargebee', card: { brand: 'mastercard', last4: '5555' } })] },
+			],
+		} as never);
+
+		renderWidget();
+
+		// Wait for data to load
+		expect(await screen.findByText('visa •••• 4242')).toBeInTheDocument();
+		expect(screen.getByText('mastercard •••• 5555')).toBeInTheDocument();
+
+		// Check tabs exist
+		expect(screen.getByRole('button', { name: /^All\s+\(2\)$/i })).toBeInTheDocument();
+		const stripeTab = screen.getByRole('button', { name: /^Stripe\s+\(1\)$/i });
+		const chargebeeTab = screen.getByRole('button', { name: /^Chargebee\s+\(1\)$/i });
+		expect(stripeTab).toBeInTheDocument();
+		expect(chargebeeTab).toBeInTheDocument();
+
+		// Check provider badges
+		expect(screen.getByText('Stripe')).toBeInTheDocument();
+		expect(screen.getByText('Chargebee')).toBeInTheDocument();
+
+		// Click on Stripe filter tab
+		await userEvent.click(stripeTab);
+		expect(screen.getByText('visa •••• 4242')).toBeInTheDocument();
+		expect(screen.queryByText('mastercard •••• 5555')).not.toBeInTheDocument();
+
+		// Click on Chargebee filter tab
+		await userEvent.click(chargebeeTab);
+		expect(screen.queryByText('visa •••• 4242')).not.toBeInTheDocument();
+		expect(screen.getByText('mastercard •••• 5555')).toBeInTheDocument();
+	});
+
+	it('shows provider empty state with dedicated add button when provider has no cards', async () => {
+		vi.mocked(CustomerPortalApi.getIntegrations).mockResolvedValue({
+			payment_integrations: [
+				{
+					provider: 'stripe',
+					capabilities: [{ type: 'payment_method_management', is_default: true }],
+				},
+				{
+					provider: 'chargebee',
+					capabilities: [{ type: 'payment_method_management', is_default: false }],
+				},
+			],
+		} as never);
+		vi.mocked(CustomerPortalApi.getPaymentMethods).mockResolvedValue({
+			providers: [
+				{ provider: 'chargebee', items: [card({ id: 'pm_cb', provider: 'chargebee', card: { brand: 'visa', last4: '4242' } })] },
+				{ provider: 'stripe', items: [] },
+			],
+		} as never);
+
+		renderWidget();
+
+		// Wait for methods to load
+		expect(await screen.findByText('visa •••• 4242')).toBeInTheDocument();
+
+		// Filter to Stripe
+		await userEvent.click(screen.getByRole('button', { name: /^Stripe/i }));
+		expect(screen.getByText('No Stripe cards')).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /Add card \(Stripe\)/i })).toBeInTheDocument();
+	});
 });
