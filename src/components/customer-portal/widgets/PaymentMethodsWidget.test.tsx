@@ -305,6 +305,63 @@ describe('PaymentMethodsWidget', () => {
 		expect(screen.getByText('mastercard •••• 5555')).toBeInTheDocument();
 	});
 
+	it('resets the provider filter to all when the selected provider is removed', async () => {
+		vi.mocked(CustomerPortalApi.getIntegrations).mockResolvedValue({
+			payment_integrations: [
+				{ provider: 'stripe', capabilities: [{ type: 'payment_method_management', is_default: true }] },
+				{ provider: 'chargebee', capabilities: [{ type: 'payment_method_management', is_default: false }] },
+			],
+		} as never);
+		vi.mocked(CustomerPortalApi.getPaymentMethods).mockResolvedValue({
+			providers: [
+				{ provider: 'stripe', items: [card({ id: 'pm_stripe', provider: 'stripe', card: { brand: 'visa', last4: '4242' } })] },
+				{ provider: 'chargebee', items: [card({ id: 'pm_cb', provider: 'chargebee', card: { brand: 'mastercard', last4: '5555' } })] },
+			],
+		} as never);
+		vi.mocked(CustomerPortalApi.addPaymentMethod).mockResolvedValue({
+			provider: 'chargebee',
+			action: { type: 'none' },
+		} as never);
+
+		const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+		const i18n = createInstance();
+		i18n.init({
+			lng: 'en',
+			fallbackLng: 'en',
+			ns: ['customer-portal'],
+			defaultNS: 'customer-portal',
+			resources: { en: { 'customer-portal': enPortal } },
+			interpolation: { escapeValue: false },
+		});
+		render(
+			<I18nextProvider i18n={i18n}>
+				<QueryClientProvider client={client}>
+					<PaymentMethodsWidget />
+				</QueryClientProvider>
+			</I18nextProvider>,
+		);
+
+		await screen.findByText('visa •••• 4242');
+		await userEvent.click(screen.getByRole('button', { name: /^All providers\s+\(2\)$/i }));
+		const menu = await screen.findByRole('menu');
+		await userEvent.click(within(menu).getByRole('menuitem', { name: /^Stripe\s+\(1\)$/i }));
+		expect(await screen.findByRole('button', { name: /^Stripe\s+\(1\)$/i })).toBeInTheDocument();
+
+		// Stripe is disabled elsewhere while the portal stays open: the integrations
+		// query refreshes without it, leaving chargebee as the only manager.
+		client.setQueryData(['portal-integrations'], {
+			payment_integrations: [{ provider: 'chargebee', capabilities: [{ type: 'payment_method_management', is_default: false }] }],
+		});
+
+		// The filter must fall back to "all" rather than keep the Add button wired
+		// to `addMethod('stripe')` for a provider that no longer exists.
+		const addButton = await screen.findByRole('button', { name: /add card/i });
+		await userEvent.click(addButton);
+		await waitFor(() =>
+			expect(CustomerPortalApi.addPaymentMethod).toHaveBeenCalledWith(expect.objectContaining({ payment_provider: 'chargebee' })),
+		);
+	});
+
 	it('shows provider empty state with dedicated add button when provider has no cards', async () => {
 		vi.mocked(CustomerPortalApi.getIntegrations).mockResolvedValue({
 			payment_integrations: [

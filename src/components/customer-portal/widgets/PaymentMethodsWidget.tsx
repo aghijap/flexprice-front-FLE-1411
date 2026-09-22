@@ -123,12 +123,17 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	} = usePortalIntegrations();
 	const [pendingDelete, setPendingDelete] = useState<SavedPaymentMethod | null>(null);
 	const [setupUrl, setSetupUrl] = useState<string | null>(null);
-	const [selectedFilter, setSelectedFilter] = useState<PaymentGatewayType | 'all'>('all');
+	const [rawSelectedFilter, setSelectedFilter] = useState<PaymentGatewayType | 'all'>('all');
 	const queryClient = useQueryClient();
 
 	const canManage = supports('payment_method_management');
 	const setDefaultProviders = providersFor('set_default_method');
 	const manageProviders = providersFor('payment_method_management');
+
+	// If the selected provider drops out of manageProviders (e.g. it was disabled
+	// after this widget mounted), fall back to "all" for this render instead of
+	// leaving the Add button wired to a provider that no longer exists.
+	const selectedFilter = rawSelectedFilter !== 'all' && !manageProviders.includes(rawSelectedFilter) ? 'all' : rawSelectedFilter;
 
 	const { data, isLoading, isError } = useQuery({
 		queryKey: portalPaymentMethodsQueryKey,

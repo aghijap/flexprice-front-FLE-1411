@@ -1,4 +1,5 @@
 import { CHECKOUT_RETURN_PARAM } from './checkoutHandoff';
+import type { PaymentGatewayType } from '@/types/dto/CustomerPortalBilling';
 
 /** Where the token is kept so a return trip can restore it without the URL. */
 const TOKEN_STORAGE_KEY = 'flexprice.portal.sessionToken';
@@ -82,8 +83,6 @@ export const recallSessionToken = (): string | null => {
  */
 const PRESERVED_PARAMS = ['section'];
 
-import type { PaymentGatewayType } from '@/types/dto/CustomerPortalBilling';
-
 /**
  * The URL a payment provider should send the customer back to.
  *
@@ -104,9 +103,10 @@ export const portalReturnUrl = (provider?: PaymentGatewayType): string => {
 		// Chargebee API rejects ports other than 80, 443, 8080, 8443 on HTTP URLs.
 		// In local dev on port 3000 or 5173, drop the port so docker port 80 / standard HTTP is used.
 		const isLocalPort = current.port === '3000' || current.port === '5173';
-		const origin = provider === 'chargebee' && isLocalPort && current.hostname === 'localhost'
-			? `${current.protocol}//${current.hostname}`
-			: current.origin;
+		const origin =
+			provider === 'chargebee' && isLocalPort && current.hostname === 'localhost'
+				? `${current.protocol}//${current.hostname}`
+				: current.origin;
 
 		// Rebuilt from the path rather than edited, so nothing unrecognised — the
 		// token included — can survive by being forgotten about here.
