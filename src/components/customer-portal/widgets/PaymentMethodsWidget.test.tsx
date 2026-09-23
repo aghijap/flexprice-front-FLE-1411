@@ -396,4 +396,32 @@ describe('PaymentMethodsWidget', () => {
 		expect(screen.getByText('No Stripe cards')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /Add card \(Stripe\)/i })).toBeInTheDocument();
 	});
+
+	it('does not render filter dropdown or add dropdown when only one provider supports payment methods, even with duplicate connection entries', async () => {
+		vi.mocked(CustomerPortalApi.getIntegrations).mockResolvedValue({
+			payment_integrations: [
+				{
+					provider: 'stripe',
+					capabilities: [{ type: 'payment_method_management', is_default: true }],
+				},
+				{
+					provider: 'stripe',
+					capabilities: [{ type: 'payment_method_management', is_default: false }],
+				},
+			],
+		} as never);
+		vi.mocked(CustomerPortalApi.getPaymentMethods).mockResolvedValue({
+			providers: [{ provider: 'stripe', items: [card({ provider: 'stripe' })] }],
+		} as never);
+
+		renderWidget();
+
+		expect(await screen.findByText('visa •••• 4242')).toBeInTheDocument();
+		// No filter dropdown
+		expect(screen.queryByRole('button', { name: /all providers/i })).not.toBeInTheDocument();
+		// Add card is a direct button, not a dropdown trigger
+		const addBtn = screen.getByRole('button', { name: /^add card$/i });
+		expect(addBtn).toBeInTheDocument();
+		expect(addBtn).not.toHaveAttribute('aria-haspopup');
+	});
 });

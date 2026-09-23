@@ -127,8 +127,8 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	const queryClient = useQueryClient();
 
 	const canManage = supports('payment_method_management');
-	const setDefaultProviders = providersFor('set_default_method');
-	const manageProviders = providersFor('payment_method_management');
+	const setDefaultProviders = Array.from(new Set(providersFor('set_default_method')));
+	const manageProviders = Array.from(new Set(providersFor('payment_method_management')));
 
 	// If the selected provider drops out of manageProviders (e.g. it was disabled
 	// after this widget mounted), fall back to "all" for this render instead of
