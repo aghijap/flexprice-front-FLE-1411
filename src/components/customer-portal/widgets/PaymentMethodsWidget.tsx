@@ -21,7 +21,7 @@ interface PaymentMethodsWidgetProps {
 	label?: string;
 }
 
-/** Names a method for an accessible label without leaking the gateway. */
+/** Renders a card's expiry as MM/YY, or null when the gateway did not report one. */
 const formatExpiry = (month?: number, year?: number) => {
 	if (!month || !year) return null;
 	return `${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
@@ -39,6 +39,8 @@ const MethodRow = ({ method, canSetDefault, onSetDefault, onDelete, isBusy }: Me
 	const { t } = useTranslation('customer-portal');
 	const expiry = formatExpiry(method.card?.exp_month, method.card?.exp_year);
 	const isExpired = method.status === 'EXPIRED';
+	// Shared by the visible title and the row menu's accessible name, so the two
+	// cannot drift.
 	const described = method.card?.last4
 		? t('paymentMethods.cardLabel', { brand: method.card.brand ?? 'card', last4: method.card.last4 })
 		: method.id;
@@ -68,6 +70,8 @@ const MethodRow = ({ method, canSetDefault, onSetDefault, onDelete, isBusy }: Me
 								label: t('paymentMethods.setDefault'),
 								icon: <Star className='w-4 h-4' />,
 								disabled: method.is_default || !canSetDefault || isExpired || isBusy,
+								// Kept visible and explained rather than hidden: a missing item leaves
+								// the customer wondering whether the portal can do this at all.
 								disabledReason: method.is_default
 									? t('paymentMethods.alreadyDefault')
 									: !canSetDefault
@@ -127,6 +131,8 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	const queryClient = useQueryClient();
 
 	const canManage = supports('payment_method_management');
+	// Capability is per provider: in a mixed-provider portal a global flag would
+	// offer Set as default on a provider that cannot do it, and the call would fail.
 	const setDefaultProviders = Array.from(new Set(providersFor('set_default_method')));
 	const manageProviders = Array.from(new Set(providersFor('payment_method_management')));
 
@@ -149,7 +155,14 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 				cancel_url: portalReturnUrl(provider),
 			}),
 		onSuccess: async (response) => {
+			// A provider that vaults server-to-server returns type 'none' — there is
+			// nothing to redirect to, so refresh instead of waiting for a return trip.
 			if (response.action.type === 'redirect' && response.action.url) {
+				// A new tab, not this one: navigating away would unmount the portal, so a
+				// customer who abandons the provider's page has nothing to come back to.
+				// The link is shown as well, because the open runs in an async callback
+				// rather than the click and a popup blocker can stop it. Both paths refuse
+				// a non-http(s) scheme — the URL is an unconstrained API string.
 				setSetupUrl(response.action.url);
 				openPaymentUrl(response.action.url);
 				return;
@@ -165,6 +178,8 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 			CustomerPortalApi.setDefaultPaymentMethod({ payment_provider: method.provider, payment_method_id: method.id }),
 		onSuccess: (updated) => {
 			toast.success(t('paymentMethods.defaultUpdated'));
+			// The response is the gateway re-read after the write, so refetching here
+			// would only ask the same question twice.
 			queryClient.setQueryData(portalPaymentMethodsQueryKey, updated);
 		},
 		onError: (error: Error) => toast.error(error.message || t('errors.setDefaultPaymentMethod')),
@@ -187,6 +202,8 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	const isBusy = isSettingDefault || isDeleting;
 	const defaultAddProvider = defaultProviderFor('payment_method_management');
 
+	// An integrations failure is not the same as a provider that cannot manage
+	// methods — saying "not available" would state something we do not know.
 	if (integrationsError) {
 		return (
 			<PortalSection icon={<CreditCard />} title={label ?? t('paymentMethods.title')}>
