@@ -133,8 +133,8 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 	const canManage = supports('payment_method_management');
 	// Capability is per provider: in a mixed-provider portal a global flag would
 	// offer Set as default on a provider that cannot do it, and the call would fail.
-	const setDefaultProviders = Array.from(new Set(providersFor('set_default_method')));
-	const manageProviders = Array.from(new Set(providersFor('payment_method_management')));
+	const setDefaultProviders = providersFor('set_default_method');
+	const manageProviders = providersFor('payment_method_management');
 
 	// If the selected provider drops out of manageProviders (e.g. it was disabled
 	// after this widget mounted), fall back to "all" for this render instead of
@@ -151,8 +151,8 @@ const PaymentMethodsWidget = ({ label }: PaymentMethodsWidgetProps) => {
 		mutationFn: (provider: PaymentGatewayType) =>
 			CustomerPortalApi.addPaymentMethod({
 				payment_provider: provider,
-				success_url: portalReturnUrl(provider),
-				cancel_url: portalReturnUrl(provider),
+				success_url: portalReturnUrl(),
+				cancel_url: portalReturnUrl(),
 			}),
 		onSuccess: async (response) => {
 			// A provider that vaults server-to-server returns type 'none' — there is
