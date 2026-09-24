@@ -269,12 +269,10 @@
 		"alreadyDefault": "This is already your default card.",
 		"setDefaultUnsupported": "Your payment provider does not support a default card.",
 		"expiredCannotDefault": "An expired card cannot be made default.",
-		"all": "All",
 		"allProviders": "All providers",
 		"addForProvider": "Add card ({{provider}})",
 		"providerEmptyTitle": "No {{provider}} cards",
-		"providerEmptyDescription": "Add a card for {{provider}} to pay invoices and enable automatic top-ups",
-		"setDefaultForProvider": "Set as default for {{provider}}"
+		"providerEmptyDescription": "Add a card for {{provider}} to pay invoices and enable automatic top-ups"
 	},
 	"invoiceDetail": {
 		"title": "Invoice",
