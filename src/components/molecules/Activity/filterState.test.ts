@@ -34,4 +34,21 @@ describe('filterState', () => {
 		expect(actionsFor('wallet', ['wallet.created', 'invoice.paid'])).toEqual(['wallet.created']);
 		expect(actionsFor('', ['wallet.created', 'invoice.paid'])).toHaveLength(2);
 	});
+	it('never sends entity_type alone: the API needs it together with entity_id', () => {
+		const q = filtersToQuery({ ...defaultFilters({}, now), entityType: 'customer' });
+		expect(q.entity_type).toBeUndefined();
+		expect(q.entity_id).toBeUndefined();
+		expect(q.actions).toEqual(['customer.created', 'customer.updated', 'customer.deleted']);
+	});
+	it('keeps a chosen action when only the type is set', () => {
+		const q = filtersToQuery({ ...defaultFilters({}, now), entityType: 'customer', action: 'customer.updated' });
+		expect(q.entity_type).toBeUndefined();
+		expect(q.actions).toEqual(['customer.updated']);
+	});
+	it('sends entity_type with entity_id, without the per-type action list', () => {
+		const q = filtersToQuery({ ...defaultFilters({}, now), entityType: 'customer', entityId: 'cust_1' });
+		expect(q.entity_type).toBe('customer');
+		expect(q.entity_id).toBe('cust_1');
+		expect(q.actions).toBeUndefined();
+	});
 });

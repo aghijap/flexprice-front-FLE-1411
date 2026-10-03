@@ -1,3 +1,4 @@
+import { ACTIVITY_ACTIONS } from '@/constants/activity';
 import { ActivityQuery } from '@/types/dto/ActivityLog';
 
 export interface ActivityFilterState {
@@ -49,10 +50,17 @@ export const actionsFor = (entityType: string, all: readonly string[]): string[]
 
 export const filtersToQuery = (f: ActivityFilterState): Partial<ActivityQuery> => {
 	const q: Partial<ActivityQuery> = {};
-	if (f.entityType) q.entity_type = f.entityType;
-	if (f.entityType && f.entityId) q.entity_id = f.entityId;
+	// The API rejects entity_type without entity_id (400), so a type-only filter becomes that type's actions.
+	if (f.entityType && f.entityId) {
+		q.entity_type = f.entityType;
+		q.entity_id = f.entityId;
+	}
 	if (f.actorType) q.actor_type = f.actorType;
 	if (f.action) q.actions = [f.action];
+	else if (f.entityType && !f.entityId) {
+		const forType = actionsFor(f.entityType, ACTIVITY_ACTIONS);
+		if (forType.length) q.actions = forType;
+	}
 	if (f.start) q.start_time = f.start.toISOString();
 	if (f.end) q.end_time = f.end.toISOString();
 	if (f.customerId) q.customer_id = f.customerId;
