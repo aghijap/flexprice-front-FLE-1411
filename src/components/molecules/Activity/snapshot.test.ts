@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { snapshotRows } from './snapshot';
+import { parentRef, snapshotRows } from './snapshot';
 
 describe('snapshotRows', () => {
 	it('drops empty, internal and nested values and formats the rest', () => {
@@ -27,5 +27,23 @@ describe('snapshotRows', () => {
 	});
 	it('handles a missing snapshot', () => {
 		expect(snapshotRows(undefined)).toEqual([]);
+	});
+});
+
+describe('parent reference', () => {
+	const price = { id: 'price_1', display_name: 'Storage', entity_type: 'PLAN', entity_id: 'plan_01M3VTT21J6F', amount: '20' };
+	it('reads the owning entity from the snapshot', () => {
+		expect(parentRef(price)).toEqual({ type: 'plan', id: 'plan_01M3VTT21J6F' });
+	});
+	it('ignores a missing, empty or unknown owner', () => {
+		expect(parentRef(undefined)).toBeNull();
+		expect(parentRef({ entity_type: 'PLAN', entity_id: '' })).toBeNull();
+		expect(parentRef({ entity_type: 'SOMETHING_NEW', entity_id: 'x_1' })).toBeNull();
+	});
+	it('shows the owner as a linked Plan row instead of raw entity_type/entity_id text', () => {
+		const rows = snapshotRows(price);
+		expect(rows.map((r) => r.key)).not.toContain('entity_type');
+		const plan = rows.find((r) => r.key === 'entity_id');
+		expect(plan).toMatchObject({ label: 'Plan', format: 'ref:plan', value: 'plan_01M3VTT21J6F' });
 	});
 });

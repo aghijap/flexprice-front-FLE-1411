@@ -79,4 +79,17 @@ describe('ActivityRow', () => {
 		render(wrap(<ActivityRow item={{ ...item, customer_id: 'cust_01HXAAAAAAAA' }} onOpen={vi.fn()} showCustomer={false} />));
 		expect(screen.queryByText('cust_…AAAAAA')).not.toBeInTheDocument();
 	});
+
+	it('shows the plan a price belongs to, as a short reference', () => {
+		const price = {
+			...item,
+			entity_type: 'price',
+			entity_id: 'price_01HXABCDEF',
+			snapshot: { entity_type: 'PLAN', entity_id: 'plan_01HX7KQ2M9RQ' },
+			changes: undefined,
+		};
+		render(wrap(<ActivityRow item={price} onOpen={vi.fn()} />));
+		expect(screen.getByText(/plan_…Q2M9RQ/)).toBeInTheDocument();
+		expect(screen.queryByText(/plan_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
+	});
 });

@@ -5,6 +5,7 @@ import { ActivityItem } from '@/types/dto/ActivityLog';
 import ActorBadge from './ActorBadge';
 import { EntityRef, FormattedValue } from './formatters';
 import { shortId } from './entityRegistry';
+import { parentRef } from './snapshot';
 import { entityTitle, summaryOf } from './summary';
 import { timeOf } from './time';
 
@@ -27,6 +28,7 @@ const ActivityRow: FC<Props> = ({ item, onOpen, compact, showCustomer = true, se
 	const entries = Object.entries(item.changes ?? {});
 	const single = entries.length === 1 ? entries[0][1] : null;
 	const entityType = t(`entity.${item.entity_type}`, { defaultValue: item.entity_type.replace(/_/g, ' ') });
+	const parent = parentRef(item.snapshot);
 	const titleIsShortId = entityTitle(item) === shortId(item.entity_id);
 	return (
 		<div
@@ -51,6 +53,7 @@ const ActivityRow: FC<Props> = ({ item, onOpen, compact, showCustomer = true, se
 				<span className='flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-content-muted text-xs'>
 					{!compact && <span className='font-medium text-blue-700 dark:text-blue-300'>{entityType}</span>}
 					{!compact && titleIsShortId && <EntityRef type={item.entity_type} id={item.entity_id} customerId={item.customer_id} />}
+					{!compact && parent && <EntityRef type={parent.type} id={parent.id} customerId={item.customer_id} />}
 					{!compact && showCustomer && item.customer_id && item.entity_type !== 'customer' && (
 						<EntityRef type='customer' id={item.customer_id} />
 					)}

@@ -91,4 +91,24 @@ describe('ActivityDetailSheet', () => {
 		expect(screen.getByText('Context')).toBeInTheDocument();
 		expect(screen.getAllByText(/subs_…Q2M9RQ/).length).toBeGreaterThan(0);
 	});
+
+	it('lists the owning plan in Context for a price', async () => {
+		const price: ActivityItem = {
+			...item,
+			id: 'act_p1',
+			entity_type: 'price',
+			entity_id: 'price_01HXABCDEF',
+			action: 'price.created',
+			changes: undefined,
+			snapshot: { entity_type: 'PLAN', entity_id: 'plan_01HX7KQ2M9RQ' },
+			display: {
+				...item.display,
+				parts: { ...item.display.parts, verb: 'created', entity_type: 'price', entity: 'Storage', field: null, count: 0 },
+			},
+		};
+		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
+		render(wrap(<ActivityDetailSheet open id='act_p1' onClose={vi.fn()} loaded={[price]} />));
+		expect((await screen.findAllByText(/plan_…Q2M9RQ/)).length).toBeGreaterThan(0);
+		expect(screen.queryByText(/plan_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
+	});
 });

@@ -12,7 +12,7 @@ import { EntityRef, FormattedValue } from './formatters';
 import ActivityList from './ActivityList';
 import { verbOf } from './ActivityRow';
 import { shortId } from './entityRegistry';
-import { snapshotRows } from './snapshot';
+import { parentRef, snapshotRows } from './snapshot';
 import { summaryOf } from './summary';
 
 interface Props {
@@ -143,6 +143,21 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 						<span>
 							<EntityRef type={it.entity_type} id={it.entity_id} customerId={ctxCustomer} />
 						</span>
+						{(() => {
+							const parent = parentRef(it.snapshot);
+							return (
+								parent && (
+									<>
+										<span className='text-content-muted'>
+											{t(`entity.${parent.type}`, { defaultValue: parent.type.replace(/_/g, ' ') })}
+										</span>
+										<span>
+											<EntityRef type={parent.type} id={parent.id} customerId={ctxCustomer} />
+										</span>
+									</>
+								)
+							);
+						})()}
 						{it.subscription_id && it.entity_type !== 'subscription' && (
 							<>
 								<span className='text-content-muted'>{t('sheet.subscription', { defaultValue: 'Subscription' })}</span>
