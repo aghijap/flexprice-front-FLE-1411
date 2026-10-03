@@ -14,7 +14,24 @@
 		"field": "Field",
 		"before": "Before",
 		"after": "After",
-		"redacted": "redacted"
+		"redacted": "redacted",
+		"title": "Activity",
+		"loading": "Loading…",
+		"beyondRetention": "This entry is older than the retention window and is no longer available.",
+		"who": "Who",
+		"actor": "Actor",
+		"ownedBy": "Owned by",
+		"source": "Source",
+		"when": "When",
+		"occurred": "Occurred",
+		"request": "Request",
+		"whatChanged": "What changed",
+		"recordDeleted": "Record deleted",
+		"notCaptured": "Changes not captured: {{reason}}",
+		"context": "Context",
+		"customer": "Customer",
+		"related": "Related changes in this request",
+		"noRelated": "No other changes in this request."
 	},
 	"list": {
 		"error": "Could not load activity.",
@@ -25,7 +42,14 @@
 	"verb": {
 		"created": "{{actor}} created {{entityType}} {{entity}}",
 		"updated": "{{actor}} updated {{entityType}} {{entity}}",
-		"deleted": "{{actor}} deleted {{entityType}} {{entity}}"
+		"deleted": "{{actor}} deleted {{entityType}} {{entity}}",
+		"paused": "{{actor}} paused {{entityType}} {{entity}}",
+		"resumed": "{{actor}} resumed {{entityType}} {{entity}}",
+		"cancelled": "{{actor}} cancelled {{entityType}} {{entity}}",
+		"plan_changed": "{{actor}} changed plan on {{entityType}} {{entity}}",
+		"finalized": "{{actor}} finalized {{entityType}} {{entity}}",
+		"voided": "{{actor}} voided {{entityType}} {{entity}}",
+		"paid": "{{actor}} marked {{entityType}} {{entity}} paid"
 	},
 	"entity": {
 		"customer": "customer",
@@ -36,6 +60,50 @@
 		"price": "price",
 		"payment": "payment",
 		"wallet_transaction": "wallet transaction",
-		"entitlement_grant": "entitlement grant"
-	}
+		"entitlement_grant": "entitlement grant",
+		"invoice_line_item": "invoice line item",
+		"subscription_line_item": "subscription line item",
+		"payment_method": "payment method",
+		"refund": "refund",
+		"credit_note": "credit note",
+		"checkout_session": "checkout session",
+		"subscription_phase": "subscription phase",
+		"subscription_schedule": "subscription schedule",
+		"subscription_pause": "subscription pause",
+		"credit_grant": "credit grant",
+		"credit_grant_application": "credit grant application",
+		"coupon_association": "coupon association",
+		"coupon_application": "coupon application",
+		"addon_association": "addon association",
+		"tax_association": "tax association"
+	},
+	"page": {
+		"title": "Activity Log",
+		"subtitle": "Every change to customers, subscriptions, invoices, wallets and more, with who made it and what changed."
+	},
+	"toggle": {
+		"hideSystem": "Hide system changes"
+	},
+	"filters": {
+		"entityType": "Entity type",
+		"entity": "Entity",
+		"entityId": "Entity ID",
+		"actions": "Actions",
+		"actorType": "Actor type",
+		"actorId": "Actor ID",
+		"customerId": "Customer ID",
+		"requestId": "Request ID",
+		"occurredAt": "Occurred at"
+	},
+	"actor": {
+		"user": "User",
+		"api_key": "API key",
+		"system": "System",
+		"customer_portal": "Customer portal"
+	},
+	"scope": {
+		"allRelated": "All related",
+		"customerOnly": "Customer only"
+	},
+	"openInLog": "Open in activity log"
 }

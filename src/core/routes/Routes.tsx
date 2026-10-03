@@ -58,6 +58,7 @@ import {
 	CostSheetDetails as CostSheetDetailsPage,
 	CostSheetCharges as CostSheetChargesPage,
 	Pricing as PricingPage,
+	ActivityLogPage,
 	AddCharges as AddChargesPage,
 	Coupons as CouponsPage,
 	CouponDetails,
@@ -142,6 +143,7 @@ export const RouteNames = {
 	productCatalog: '/product-catalog',
 	plan: '/product-catalog/plan',
 	pricing: '/product-catalog/pricing-widget',
+	activity: '/activity',
 	addCharges: '/product-catalog/plan/:planId/add-charges',
 
 	features: '/product-catalog/features',
@@ -578,6 +580,11 @@ export const MainRouter: any = createBrowserRouter([
 			{
 				path: RouteNames.pricing,
 				element: <PricingPage />,
+			},
+			{
+				path: RouteNames.activity,
+				element: <ActivityLogPage />,
+				handle: requirePermission('activity', 'read'),
 			},
 			...(config.platform.revenue.enabled
 				? [
