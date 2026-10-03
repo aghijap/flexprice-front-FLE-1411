@@ -13,6 +13,7 @@ import ActivityList from './ActivityList';
 import { verbOf } from './ActivityRow';
 import { shortId } from './entityRegistry';
 import { parentRef, snapshotRows } from './snapshot';
+import SnapshotTable from './SnapshotTable';
 import { summaryOf } from './summary';
 
 interface Props {
@@ -108,20 +109,7 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 				<Section title={t('sheet.whatChanged', { defaultValue: 'What changed' })}>
 					{hasChanges && it.changes && <ChangesTable changes={it.changes} siblings={it.snapshot} customerId={ctxCustomer} />}
 					{verb === 'created' && it.snapshot && (
-						<KeyValueGrid>
-							{snapshotRows(it.snapshot).map((r) => (
-								<Fragment key={r.key}>
-									<span className='text-content-muted'>{r.label}</span>
-									{r.format === 'redacted' ? (
-										<span className='italic text-content-muted'>{t('sheet.redacted')}</span>
-									) : (
-										<span className='break-all'>
-											<FormattedValue value={r.value} format={r.format} siblings={it.snapshot} customerId={ctxCustomer} />
-										</span>
-									)}
-								</Fragment>
-							))}
-						</KeyValueGrid>
+						<SnapshotTable rows={snapshotRows(it.snapshot)} siblings={it.snapshot} customerId={ctxCustomer} />
 					)}
 					{verb === 'deleted' && (
 						<span className='text-content-muted'>{t('sheet.recordDeleted', { defaultValue: 'The record was deleted.' })}</span>
