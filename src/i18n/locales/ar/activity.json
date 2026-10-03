@@ -1,4 +1,41 @@
 {
-	"ref": { "deleted": "deleted" },
-	"value": { "on": "On", "off": "Off" }
+	"ref": {
+		"deleted": "deleted"
+	},
+	"value": {
+		"on": "On",
+		"off": "Off"
+	},
+	"row": {
+		"redactedChanged": "{{field}} changed",
+		"fieldsChanged": "{{count}} fields changed"
+	},
+	"sheet": {
+		"field": "Field",
+		"before": "Before",
+		"after": "After",
+		"redacted": "redacted"
+	},
+	"list": {
+		"error": "Could not load activity.",
+		"retry": "Retry",
+		"empty": "No activity yet.",
+		"loadMore": "Load more"
+	},
+	"verb": {
+		"created": "{{actor}} created {{entityType}} {{entity}}",
+		"updated": "{{actor}} updated {{entityType}} {{entity}}",
+		"deleted": "{{actor}} deleted {{entityType}} {{entity}}"
+	},
+	"entity": {
+		"customer": "customer",
+		"subscription": "subscription",
+		"wallet": "wallet",
+		"invoice": "invoice",
+		"plan": "plan",
+		"price": "price",
+		"payment": "payment",
+		"wallet_transaction": "wallet transaction",
+		"entitlement_grant": "entitlement grant"
+	}
 }
