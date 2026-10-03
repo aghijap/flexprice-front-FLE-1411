@@ -26,10 +26,10 @@ const ChangesTable: FC<Props> = ({ changes, siblings, customerId }) => {
 						<span className='col-span-2 italic text-content-muted'>{t('sheet.redacted')}</span>
 					) : (
 						<>
-							<span className='text-content-muted'>
+							<span className={ch.from == null ? 'italic text-content-muted' : 'line-through text-red-700 dark:text-red-400'}>
 								<FormattedValue value={ch.from} format={ch.format} siblings={siblings} customerId={customerId} />
 							</span>
-							<span className='font-medium'>
+							<span className='font-medium text-green-700 dark:text-green-400'>
 								<FormattedValue value={ch.to} format={ch.format} siblings={siblings} customerId={customerId} />
 							</span>
 						</>

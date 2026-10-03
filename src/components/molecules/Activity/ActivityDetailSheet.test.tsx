@@ -8,7 +8,8 @@ import { ActivityItem } from '@/types/dto/ActivityLog';
 
 vi.mock('react-i18next', () => ({
 	useTranslation: () => ({
-		t: (key: string, opts?: Record<string, unknown>) => (typeof opts?.defaultValue === 'string' ? opts.defaultValue : key),
+		t: (key: string, opts?: Record<string, unknown>) =>
+			typeof opts?.defaultValue === 'string' ? opts.defaultValue.replace(/\{\{(\w+)\}\}/g, (_, k: string) => String(opts[k] ?? '')) : key,
 	}),
 }));
 
@@ -80,5 +81,14 @@ describe('ActivityDetailSheet', () => {
 		render(wrap(<ActivityDetailSheet open id='act_x' onClose={vi.fn()} />));
 		await waitFor(() => expect(screen.getByText('list.error')).toBeInTheDocument());
 		expect(screen.queryByText(/older than the retention window/i)).not.toBeInTheDocument();
+	});
+
+	it('shows the eyebrow with the short activity id and an entity row in Context', async () => {
+		const long: ActivityItem = { ...item, id: 'act_01HXB0000004F', entity_id: 'subs_01HX7KQ2M9RQ' };
+		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
+		render(wrap(<ActivityDetailSheet open id='act_01HXB0000004F' onClose={vi.fn()} loaded={[long]} />));
+		expect(await screen.findByText(/act_…00004F/)).toBeInTheDocument();
+		expect(screen.getByText('Context')).toBeInTheDocument();
+		expect(screen.getAllByText(/subs_…Q2M9RQ/).length).toBeGreaterThan(0);
 	});
 });

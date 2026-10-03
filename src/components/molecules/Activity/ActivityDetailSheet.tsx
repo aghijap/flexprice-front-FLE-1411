@@ -1,7 +1,7 @@
 import { FC, Fragment, ReactNode, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Chip, CopyIdButton, Loader, Sheet } from '@/components/atoms';
+import { CopyIdButton, Loader, Sheet } from '@/components/atoms';
 import ActivityApi from '@/api/ActivityApi';
 import { getHttpStatus } from '@/core/axios/types';
 import { formatDateTimeWithSecondsAndTimezone } from '@/utils/common/format_date';
@@ -11,6 +11,7 @@ import ChangesTable from './ChangesTable';
 import { EntityRef, FormattedValue } from './formatters';
 import ActivityList from './ActivityList';
 import { verbOf } from './ActivityRow';
+import { shortId } from './entityRegistry';
 import { snapshotRows } from './snapshot';
 import { summaryOf } from './summary';
 
@@ -21,8 +22,6 @@ interface Props {
 	customerId?: string;
 	loaded?: ActivityItem[];
 }
-
-const CHIP_VARIANT = { created: 'success', updated: 'default', deleted: 'failed', other: 'info' } as const;
 
 const Section: FC<{ title: string; children: ReactNode }> = ({ title, children }) => (
 	<section className='grid gap-2'>
@@ -67,11 +66,7 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 
 		return (
 			<div className='grid gap-5 text-sm pt-4'>
-				<header className='grid gap-2'>
-					<div className='flex flex-wrap items-center gap-2'>
-						<Chip label={it.action.slice(it.action.lastIndexOf('.') + 1).replace(/_/g, ' ')} variant={CHIP_VARIANT[verb]} />
-						<EntityRef type={it.entity_type} id={it.entity_id} customerId={ctxCustomer} />
-					</div>
+				<header className='grid gap-1'>
 					<h4 className='text-[15px] font-semibold leading-snug text-content'>{summary}</h4>
 				</header>
 
@@ -80,6 +75,9 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 						<span className='text-content-muted'>{t('sheet.actor', { defaultValue: 'Actor' })}</span>
 						<span className='inline-flex flex-wrap items-center gap-1'>
 							<ActorBadge actor={it.actor} />
+							<span className='text-content-muted'>
+								· {t(`actor.${it.actor.type}`, { defaultValue: it.actor.type.replace(/_/g, ' ') })}
+							</span>
 							{it.actor.user_id && (
 								<span className='inline-flex items-center gap-1 text-content-muted'>
 									· {t('sheet.ownedBy', { defaultValue: 'owned by' })} <EntityRef type='user' id={it.actor.user_id} />
@@ -141,7 +139,19 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 
 				<Section title={t('sheet.context', { defaultValue: 'Context' })}>
 					<KeyValueGrid>
-						{it.customer_id && (
+						<span className='text-content-muted'>{t(`entity.${it.entity_type}`, { defaultValue: it.entity_type.replace(/_/g, ' ') })}</span>
+						<span>
+							<EntityRef type={it.entity_type} id={it.entity_id} customerId={ctxCustomer} />
+						</span>
+						{it.subscription_id && it.entity_type !== 'subscription' && (
+							<>
+								<span className='text-content-muted'>{t('sheet.subscription', { defaultValue: 'Subscription' })}</span>
+								<span>
+									<EntityRef type='subscription' id={it.subscription_id} customerId={ctxCustomer} />
+								</span>
+							</>
+						)}
+						{it.customer_id && it.entity_type !== 'customer' && (
 							<>
 								<span className='text-content-muted'>{t('sheet.customer', { defaultValue: 'Customer' })}</span>
 								<span>
@@ -179,7 +189,15 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 	};
 
 	return (
-		<Sheet isOpen={open} onOpenChange={(o) => !o && onClose()} size='lg' title={t('sheet.title', { defaultValue: 'Activity details' })}>
+		<Sheet
+			isOpen={open}
+			onOpenChange={(o) => !o && onClose()}
+			size='lg'
+			title={
+				<span className='text-[11px] font-normal uppercase tracking-wide text-content-muted'>
+					{t('sheet.eyebrow', { id: shortId(currentId), defaultValue: 'Activity · {{id}}' })}
+				</span>
+			}>
 			{open && (
 				<>
 					{!item && isLoading && <Loader />}
