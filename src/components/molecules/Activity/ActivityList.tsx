@@ -6,6 +6,7 @@ import useActivityList from '@/hooks/useActivityList';
 import { ActivityItem, ActivityQuery, ActivityScope } from '@/types/dto/ActivityLog';
 import ActivityRow from './ActivityRow';
 import ActivityDetailSheet from './ActivityDetailSheet';
+import { dayHeading, dayStart } from './time';
 
 export interface ActivityListProps {
 	scope: ActivityScope;
@@ -17,9 +18,6 @@ export interface ActivityListProps {
 	onOpen?: (id: string) => void;
 	customerId?: string;
 }
-
-const dayKey = (iso: string) =>
-	new Date(iso).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
 const ActivityList: FC<ActivityListProps> = ({ scope, query, pageSize = 50, compact, inline, emptyMessage, onOpen, customerId }) => {
 	const { t } = useTranslation('activity');
@@ -49,13 +47,15 @@ const ActivityList: FC<ActivityListProps> = ({ scope, query, pageSize = 50, comp
 	const sheet = !inline && <ActivityDetailSheet id={openId} open={!!openId} onClose={close} customerId={customerId} loaded={items} />;
 
 	const groups = useMemo(() => {
-		if (compact || inline) return [{ day: '', rows: items }];
-		const map = new Map<string, ActivityItem[]>();
+		if (compact || inline) return [{ key: 'all' as number | 'all', first: '', rows: items }];
+		const map = new Map<number, { first: string; rows: ActivityItem[] }>();
 		items.forEach((it) => {
-			const k = dayKey(it.occurred_at);
-			map.set(k, [...(map.get(k) ?? []), it]);
+			const k = dayStart(it.occurred_at);
+			const g = map.get(k);
+			if (g) g.rows.push(it);
+			else map.set(k, { first: it.occurred_at, rows: [it] });
 		});
-		return [...map.entries()].map(([day, rows]) => ({ day, rows }));
+		return [...map.entries()].map(([key, g]) => ({ key: key as number | 'all', ...g }));
 	}, [items, compact, inline]);
 
 	// One return with the sheet at a fixed position: if each branch rendered its own sheet, it would remount when loading finishes.
@@ -76,11 +76,14 @@ const ActivityList: FC<ActivityListProps> = ({ scope, query, pageSize = 50, comp
 	} else {
 		body = (
 			<div className='grid gap-1'>
-				{groups.map(({ day, rows }) => (
-					<div key={day || 'all'}>
-						{day && (
+				{groups.map(({ key, first, rows }) => (
+					<div key={key}>
+						{first && (
 							<div data-testid='activity-day' className='text-[11px] font-semibold tracking-wide uppercase text-content-muted pt-3 pb-1'>
-								{day}
+								{(() => {
+									const h = dayHeading(first);
+									return h.kind === 'date' ? h.date : t(`list.${h.kind}`, { date: h.date });
+								})()}
 							</div>
 						)}
 						{rows.map((it) => (
