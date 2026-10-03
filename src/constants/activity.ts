@@ -9,6 +9,7 @@ export const ACTIVITY_ENTITY_TYPES = [
 	'plan',
 	'price',
 	'payment',
+	'checkout_session',
 ] as const;
 
 export const ACTIVITY_ACTIONS = [
@@ -38,6 +39,8 @@ export const ACTIVITY_ACTIONS = [
 	'price.archived',
 	'payment.created',
 	'payment.updated',
+	'checkout_session.created',
+	'checkout_session.updated',
 ] as const;
 
 export const ACTIVITY_ACTOR_TYPES = ['user', 'api_key', 'system', 'customer_portal'] as const;

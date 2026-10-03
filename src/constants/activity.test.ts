@@ -10,6 +10,10 @@ describe('activity constants', () => {
 			).toBe(true);
 		}
 	});
+	it('offers checkout sessions, filterable by their created and updated actions', () => {
+		expect(ACTIVITY_ENTITY_TYPES).toContain('checkout_session');
+		expect(ACTIVITY_ACTIONS).toEqual(expect.arrayContaining(['checkout_session.created', 'checkout_session.updated']));
+	});
 	it('does not offer the child and association types', () => {
 		expect(ACTIVITY_ENTITY_TYPES).not.toContain('addon_association');
 		expect(ACTIVITY_ENTITY_TYPES).not.toContain('invoice_line_item');
