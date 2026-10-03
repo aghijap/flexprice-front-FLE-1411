@@ -4,6 +4,9 @@ const HIDDEN = new Set(['id', 'tenant_id', 'environment_id', 'status', 'created_
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 const REDACTED = '[redacted]';
 
+/** Fields holding ids minted by an external gateway (e.g. Razorpay `pay_…`), which can share a prefix with ours but are never Flexprice records. */
+export const isGatewayField = (key: string): boolean => key.startsWith('gateway_');
+
 const humanize = (k: string) => {
 	const s = k.replace(/_/g, ' ');
 	return s.charAt(0).toUpperCase() + s.slice(1);
@@ -17,6 +20,7 @@ const refType = (key: string): string | null => {
 };
 
 const formatOf = (key: string, v: string | number | boolean): string => {
+	if (isGatewayField(key)) return typeof v === 'boolean' ? 'boolean' : 'text';
 	if (typeof v === 'boolean') return 'boolean';
 	if (v === REDACTED) return 'redacted';
 	if (typeof v === 'string' && ISO_DATE.test(v)) return 'date';
