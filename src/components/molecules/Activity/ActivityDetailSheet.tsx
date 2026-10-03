@@ -57,20 +57,16 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 	});
 	const item = preloaded ?? data;
 	const ctxCustomer = customerId ?? item?.customer_id;
+	const summary = item ? summaryOf(item, t) : '';
 
 	const renderBody = (it: ActivityItem) => {
 		const verb = verbOf(it.action);
-		const summary = summaryOf(it, t);
 		const hasChanges = !!it.changes && Object.keys(it.changes).length > 0;
 		const metadata = Object.entries(it.metadata ?? {}).filter(([k]) => k !== 'degraded');
 		const degraded = it.metadata?.degraded?.value;
 
 		return (
-			<div className='grid gap-5 text-sm pt-4'>
-				<header className='grid gap-1'>
-					<h4 className='text-[15px] font-semibold leading-snug text-content'>{summary}</h4>
-				</header>
-
+			<div className='grid gap-5 text-sm'>
 				<Section title={t('sheet.who', { defaultValue: 'Who' })}>
 					<KeyValueGrid>
 						<span className='text-content-muted'>{t('sheet.actor', { defaultValue: 'Actor' })}</span>
@@ -196,13 +192,18 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 			isOpen={open}
 			onOpenChange={(o) => !o && onClose()}
 			size='lg'
+			// The panel clips and lays out as a column; only the body below scrolls, so the header stays put and the corners stay round.
+			className='flex flex-col gap-0 overflow-hidden p-0'
 			title={
-				<span className='text-[11px] font-normal uppercase tracking-wide text-content-muted'>
-					{t('sheet.eyebrow', { id: shortId(currentId), defaultValue: 'Activity · {{id}}' })}
+				<span className='block border-b border-line px-6 pb-3 pe-12 pt-6 text-start'>
+					<span className='block text-[11px] font-normal uppercase tracking-wide text-content-muted'>
+						{t('sheet.eyebrow', { id: shortId(currentId), defaultValue: 'Activity · {{id}}' })}
+					</span>
+					{summary && <span className='mt-1 block text-[15px] font-semibold leading-snug text-content'>{summary}</span>}
 				</span>
 			}>
 			{open && (
-				<>
+				<div data-testid='activity-sheet-body' className='min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-4'>
 					{!item && isLoading && <Loader />}
 					{!item && error && (
 						<div className='text-sm text-content-muted pt-4'>
@@ -214,7 +215,7 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 						</div>
 					)}
 					{item && renderBody(item)}
-				</>
+				</div>
 			)}
 		</Sheet>
 	);

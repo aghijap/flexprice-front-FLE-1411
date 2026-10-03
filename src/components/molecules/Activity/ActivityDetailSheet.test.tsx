@@ -111,4 +111,15 @@ describe('ActivityDetailSheet', () => {
 		expect((await screen.findAllByText(/plan_…Q2M9RQ/)).length).toBeGreaterThan(0);
 		expect(screen.queryByText(/plan_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
 	});
+
+	it('keeps the eyebrow and title in a fixed header, with only the body scrolling', async () => {
+		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
+		render(wrap(<ActivityDetailSheet open id='act_9' onClose={vi.fn()} loaded={[item]} />));
+		const title = await screen.findByText('Billing Sync plan changed subscription growth-acme');
+		const body = screen.getByTestId('activity-sheet-body');
+		expect(body.className).toMatch(/overflow-y-auto/);
+		expect(body).not.toContainElement(title);
+		expect(body).not.toContainElement(screen.getByText(/Activity · act_9/));
+		expect(body).toContainElement(screen.getByText('Who'));
+	});
 });
