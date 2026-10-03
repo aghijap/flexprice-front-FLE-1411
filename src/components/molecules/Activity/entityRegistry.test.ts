@@ -31,3 +31,10 @@ describe('resolvers', () => {
 		get.mockRestore();
 	});
 });
+
+describe('routes', () => {
+	it('does not link entities that have no detail page', () => {
+		expect(ENTITY_REGISTRY.payment.route('payment_1')).toBeNull();
+		expect(ENTITY_REGISTRY.price.route('price_1')).toBeNull();
+	});
+});

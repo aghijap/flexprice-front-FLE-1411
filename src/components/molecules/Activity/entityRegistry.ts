@@ -121,7 +121,8 @@ export const ENTITY_REGISTRY: Record<string, EntityDefinition> = {
 	},
 	payment: {
 		icon: CreditCard,
-		route: (id) => `${RouteNames.payments}/${id}`,
+		// There is only a payments list page, no per-payment detail route.
+		route: () => null,
 		resolve: resolveWith(
 			'payment',
 			(id) => PaymentApi.getPaymentById(id),
