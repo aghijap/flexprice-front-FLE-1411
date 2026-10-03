@@ -1,8 +1,8 @@
-import { FC, useMemo } from 'react';
+import { FC, ReactNode, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router';
 import { Button, Loader } from '@/components/atoms';
 import useActivityList from '@/hooks/useActivityList';
-import useQueryParams from '@/hooks/useQueryParams';
 import { ActivityItem, ActivityQuery, ActivityScope } from '@/types/dto/ActivityLog';
 import ActivityRow from './ActivityRow';
 import ActivityDetailSheet from './ActivityDetailSheet';
@@ -28,14 +28,25 @@ const ActivityList: FC<ActivityListProps> = ({ scope, query, pageSize = 50, comp
 		query,
 		pageSize,
 	});
-	const { queryParams, setQueryParam } = useQueryParams<{ activity: string }>({ activity: '' });
-	const openId = inline ? '' : queryParams.activity;
+	const [searchParams, setSearchParams] = useSearchParams();
+	const openId = inline ? '' : (searchParams.get('activity') ?? '');
 
 	const open = (id: string) => {
 		if (onOpen) return onOpen(id);
-		if (!inline) setQueryParam('activity', id);
+		if (inline) return;
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			next.set('activity', id);
+			return next;
+		});
 	};
-	const close = () => setQueryParam('activity', '');
+	const close = () =>
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			next.delete('activity');
+			return next;
+		});
+	const sheet = !inline && <ActivityDetailSheet id={openId} open={!!openId} onClose={close} customerId={customerId} loaded={items} />;
 
 	const groups = useMemo(() => {
 		if (compact || inline) return [{ day: '', rows: items }];
@@ -47,9 +58,12 @@ const ActivityList: FC<ActivityListProps> = ({ scope, query, pageSize = 50, comp
 		return [...map.entries()].map(([day, rows]) => ({ day, rows }));
 	}, [items, compact, inline]);
 
-	if (isLoading) return <Loader />;
-	if (error) {
-		return (
+	// One return with the sheet at a fixed position: if each branch rendered its own sheet, it would remount when loading finishes.
+	let body: ReactNode;
+	if (isLoading) {
+		body = <Loader />;
+	} else if (error) {
+		body = (
 			<div className='text-sm text-content-muted flex items-center gap-3'>
 				<span>{t('list.error')}</span>
 				<Button variant='outline' onClick={() => refetch()}>
@@ -57,32 +71,39 @@ const ActivityList: FC<ActivityListProps> = ({ scope, query, pageSize = 50, comp
 				</Button>
 			</div>
 		);
+	} else if (items.length === 0) {
+		body = <div className='text-sm text-content-muted py-6 text-center'>{emptyMessage ?? t('list.empty')}</div>;
+	} else {
+		body = (
+			<div className='grid gap-1'>
+				{groups.map(({ day, rows }) => (
+					<div key={day || 'all'}>
+						{day && (
+							<div data-testid='activity-day' className='text-[11px] font-semibold tracking-wide uppercase text-content-muted pt-3 pb-1'>
+								{day}
+							</div>
+						)}
+						{rows.map((it) => (
+							<ActivityRow key={it.id} item={it} onOpen={open} compact={compact} />
+						))}
+					</div>
+				))}
+				{hasNextPage && (
+					<div className='pt-2'>
+						<Button variant='outline' onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+							{t('list.loadMore')}
+						</Button>
+					</div>
+				)}
+			</div>
+		);
 	}
-	if (items.length === 0) return <div className='text-sm text-content-muted py-6 text-center'>{emptyMessage ?? t('list.empty')}</div>;
 
 	return (
-		<div className='grid gap-1'>
-			{groups.map(({ day, rows }) => (
-				<div key={day || 'all'}>
-					{day && (
-						<div data-testid='activity-day' className='text-[11px] font-semibold tracking-wide uppercase text-content-muted pt-3 pb-1'>
-							{day}
-						</div>
-					)}
-					{rows.map((it) => (
-						<ActivityRow key={it.id} item={it} onOpen={open} compact={compact} />
-					))}
-				</div>
-			))}
-			{hasNextPage && (
-				<div className='pt-2'>
-					<Button variant='outline' onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
-						{t('list.loadMore')}
-					</Button>
-				</div>
-			)}
-			{!inline && openId && <ActivityDetailSheet id={openId} onClose={close} customerId={customerId} loaded={items} />}
-		</div>
+		<>
+			{body}
+			{sheet}
+		</>
 	);
 };
 

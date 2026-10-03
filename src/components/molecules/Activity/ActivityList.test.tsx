@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ActivityApi from '@/api/ActivityApi';
 import ActivityList from './ActivityList';
@@ -68,5 +69,26 @@ describe('ActivityList', () => {
 		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
 		render(wrap(<ActivityList scope={{ kind: 'all' }} emptyMessage='Nothing yet' />));
 		await waitFor(() => expect(screen.getByText('Nothing yet')).toBeInTheDocument());
+	});
+
+	it('closes the sheet and removes the activity param', async () => {
+		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [mk('a', '2026-10-03')], has_more: false });
+		let search = '';
+		const Spy = () => {
+			search = useLocation().search;
+			return null;
+		};
+		render(
+			<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+				<MemoryRouter initialEntries={['/activity?activity=a&customer_id=cust_1']}>
+					<ActivityList scope={{ kind: 'all' }} />
+					<Spy />
+				</MemoryRouter>
+			</QueryClientProvider>,
+		);
+		await screen.findByRole('dialog');
+		await userEvent.setup().click(screen.getByRole('button', { name: /close/i }));
+		await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+		expect(search).toBe('?customer_id=cust_1');
 	});
 });

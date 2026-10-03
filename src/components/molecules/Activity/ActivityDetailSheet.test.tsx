@@ -44,7 +44,7 @@ describe('ActivityDetailSheet', () => {
 	it('renders the five sections from a loaded item and queries related changes by request id', async () => {
 		const get = vi.spyOn(ActivityApi, 'get');
 		const list = vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
-		render(wrap(<ActivityDetailSheet id='act_9' onClose={vi.fn()} loaded={[item]} />));
+		render(wrap(<ActivityDetailSheet open id='act_9' onClose={vi.fn()} loaded={[item]} />));
 		expect(screen.getByText('Billing Sync changed the plan on growth-acme')).toBeInTheDocument();
 		expect(screen.getByText('Billing Sync')).toBeInTheDocument();
 		expect(screen.getByText('req_1')).toBeInTheDocument();
@@ -57,27 +57,27 @@ describe('ActivityDetailSheet', () => {
 	it('fetches by id when the item is not in the loaded page', async () => {
 		const get = vi.spyOn(ActivityApi, 'get').mockResolvedValue(item);
 		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
-		render(wrap(<ActivityDetailSheet id='act_9' onClose={vi.fn()} loaded={[]} />));
+		render(wrap(<ActivityDetailSheet open id='act_9' onClose={vi.fn()} loaded={[]} />));
 		await waitFor(() => expect(screen.getByText('Billing Sync changed the plan on growth-acme')).toBeInTheDocument());
 		expect(get).toHaveBeenCalledWith('act_9');
 	});
 
 	it('fetches by id when not loaded and shows retention message on 404', async () => {
 		vi.spyOn(ActivityApi, 'get').mockRejectedValue({ response: { status: 404 } });
-		render(wrap(<ActivityDetailSheet id='act_old' onClose={vi.fn()} />));
+		render(wrap(<ActivityDetailSheet open id='act_old' onClose={vi.fn()} />));
 		await waitFor(() => expect(screen.getByText(/older than the retention window/i)).toBeInTheDocument());
 	});
 
 	it('treats the shared axios client 404 rejection shape as past retention', async () => {
 		const err = Object.assign(new Error('Not Found (404)'), { status: 404 });
 		vi.spyOn(ActivityApi, 'get').mockRejectedValue(err);
-		render(wrap(<ActivityDetailSheet id='act_old' onClose={vi.fn()} />));
+		render(wrap(<ActivityDetailSheet open id='act_old' onClose={vi.fn()} />));
 		await waitFor(() => expect(screen.getByText(/older than the retention window/i)).toBeInTheDocument());
 	});
 
 	it('shows the generic error for non-404 failures', async () => {
 		vi.spyOn(ActivityApi, 'get').mockRejectedValue(Object.assign(new Error('boom'), { status: 500 }));
-		render(wrap(<ActivityDetailSheet id='act_x' onClose={vi.fn()} />));
+		render(wrap(<ActivityDetailSheet open id='act_x' onClose={vi.fn()} />));
 		await waitFor(() => expect(screen.getByText('list.error')).toBeInTheDocument());
 		expect(screen.queryByText(/older than the retention window/i)).not.toBeInTheDocument();
 	});

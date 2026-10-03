@@ -14,6 +14,7 @@ import { verbOf } from './ActivityRow';
 
 interface Props {
 	id: string;
+	open: boolean;
 	onClose: () => void;
 	customerId?: string;
 	loaded?: ActivityItem[];
@@ -37,7 +38,7 @@ const isNotFound = (e: unknown) => getHttpStatus(e) === 404 || (e as { response?
 
 const snapshotText = (v: unknown) => (v === null || v === undefined ? '—' : typeof v === 'string' ? v : JSON.stringify(v));
 
-const ActivityDetailSheet: FC<Props> = ({ id, onClose, customerId, loaded }) => {
+const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded }) => {
 	const { t } = useTranslation('activity');
 	const [currentId, setCurrentId] = useState(id);
 	const [prevId, setPrevId] = useState(id);
@@ -51,7 +52,7 @@ const ActivityDetailSheet: FC<Props> = ({ id, onClose, customerId, loaded }) => 
 	const { data, error, isLoading } = useQuery({
 		queryKey: ['activity', 'item', currentId],
 		queryFn: () => ActivityApi.get(currentId),
-		enabled: !preloaded && !!currentId,
+		enabled: open && !preloaded && !!currentId,
 		retry: false,
 	});
 	const item = preloaded ?? data;
@@ -174,18 +175,22 @@ const ActivityDetailSheet: FC<Props> = ({ id, onClose, customerId, loaded }) => 
 	};
 
 	return (
-		<Sheet isOpen onOpenChange={(open) => !open && onClose()} size='lg' title={t('sheet.title', { defaultValue: 'Activity details' })}>
-			{!item && isLoading && <Loader />}
-			{!item && error && (
-				<div className='text-sm text-content-muted pt-4'>
-					{isNotFound(error)
-						? t('sheet.beyondRetention', {
-								defaultValue: 'This activity could not be found. It may be older than the retention window.',
-							})
-						: t('list.error')}
-				</div>
+		<Sheet isOpen={open} onOpenChange={(o) => !o && onClose()} size='lg' title={t('sheet.title', { defaultValue: 'Activity details' })}>
+			{open && (
+				<>
+					{!item && isLoading && <Loader />}
+					{!item && error && (
+						<div className='text-sm text-content-muted pt-4'>
+							{isNotFound(error)
+								? t('sheet.beyondRetention', {
+										defaultValue: 'This activity could not be found. It may be older than the retention window.',
+									})
+								: t('list.error')}
+						</div>
+					)}
+					{item && renderBody(item)}
+				</>
 			)}
-			{item && renderBody(item)}
 		</Sheet>
 	);
 };
