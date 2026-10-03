@@ -42,7 +42,13 @@ const entitySearch = (type: string) => {
 				const res = await CustomerApi.getCustomers({ limit: 10 });
 				const needle = query.toLowerCase();
 				return (res.items as unknown as Row[])
-					.filter((r) => !needle || String(r.name ?? r.external_id ?? '').toLowerCase().includes(needle))
+					.filter(
+						(r) =>
+							!needle ||
+							String(r.name ?? r.external_id ?? '')
+								.toLowerCase()
+								.includes(needle),
+					)
 					.map((r) => ({ value: r.id, label: labelFor('customer', r), data: r }));
 			};
 		case 'plan':

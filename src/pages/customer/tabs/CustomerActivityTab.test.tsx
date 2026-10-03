@@ -9,7 +9,9 @@ import InvoiceApi from '@/api/InvoiceApi';
 import CustomerActivityTab, { scopeFromSelection } from './CustomerActivityTab';
 
 vi.mock('react-i18next', () => ({
-	useTranslation: () => ({ t: (key: string, opts?: Record<string, unknown>) => (typeof opts?.defaultValue === 'string' ? opts.defaultValue : key) }),
+	useTranslation: () => ({
+		t: (key: string, opts?: Record<string, unknown>) => (typeof opts?.defaultValue === 'string' ? opts.defaultValue : key),
+	}),
 }));
 
 const wrap = (ui: React.ReactNode) => (
