@@ -3,10 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { ActivityItem } from '@/types/dto/ActivityLog';
 import ActorBadge from './ActorBadge';
-import { EntityRef } from './formatters';
-import { shortId } from './entityRegistry';
-import { parentRef } from './snapshot';
-import { entityTitle, rowDetail, summaryOf } from './summary';
+import { rowDetail, summaryOf } from './summary';
 import { timeOf } from './time';
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -19,16 +16,13 @@ interface Props {
 	item: ActivityItem;
 	onOpen: (id: string) => void;
 	compact?: boolean;
-	showCustomer?: boolean;
 	selected?: boolean;
 }
 
-const ActivityRow: FC<Props> = ({ item, onOpen, compact, showCustomer = true, selected }) => {
+const ActivityRow: FC<Props> = ({ item, onOpen, compact, selected }) => {
 	const { t } = useTranslation('activity');
 	const detail = rowDetail(item);
 	const entityType = t(`entity.${item.entity_type}`, { defaultValue: item.entity_type.replace(/_/g, ' ') });
-	const parent = parentRef(item.snapshot);
-	const titleIsShortId = entityTitle(item) === shortId(item.entity_id);
 	return (
 		<div
 			role='button'
@@ -51,11 +45,6 @@ const ActivityRow: FC<Props> = ({ item, onOpen, compact, showCustomer = true, se
 				<span className='font-medium text-content truncate'>{summaryOf(item, t)}</span>
 				<span className='flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-content-muted text-xs'>
 					{!compact && <span className='font-medium text-blue-700 dark:text-blue-300'>{entityType}</span>}
-					{!compact && titleIsShortId && <EntityRef type={item.entity_type} id={item.entity_id} customerId={item.customer_id} />}
-					{!compact && parent && <EntityRef type={parent.type} id={parent.id} customerId={item.customer_id} />}
-					{!compact && showCustomer && item.customer_id && item.entity_type !== 'customer' && (
-						<EntityRef type='customer' id={item.customer_id} />
-					)}
 					{detail?.kind === 'changes' && <span>{t('row.changes', { count: detail.count })}</span>}
 					{detail?.kind === 'created' && <span>{t('row.created')}</span>}
 					{detail?.kind === 'deleted' && <span>{t('row.deleted')}</span>}

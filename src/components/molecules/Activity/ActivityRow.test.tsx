@@ -3,7 +3,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
 import ActivityRow from './ActivityRow';
+import useEntityRef from '@/hooks/useEntityRef';
 import { ActivityItem } from '@/types/dto/ActivityLog';
+
+vi.mock('@/hooks/useEntityRef', () => ({ default: vi.fn(() => ({ data: undefined, isLoading: true })) }));
 
 vi.mock('react-i18next', () => ({
 	useTranslation: () => ({
@@ -61,24 +64,6 @@ describe('ActivityRow', () => {
 		expect(screen.queryByText(/subs_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
 	});
 
-	it('hides the customer reference when showCustomer is false', () => {
-		render(wrap(<ActivityRow item={{ ...item, customer_id: 'cust_01HXAAAAAAAA' }} onOpen={vi.fn()} showCustomer={false} />));
-		expect(screen.queryByText('cust_…AAAAAA')).not.toBeInTheDocument();
-	});
-
-	it('shows the plan a price belongs to, as a short reference', () => {
-		const price = {
-			...item,
-			entity_type: 'price',
-			entity_id: 'price_01HXABCDEF',
-			snapshot: { entity_type: 'PLAN', entity_id: 'plan_01HX7KQ2M9RQ' },
-			changes: undefined,
-		};
-		render(wrap(<ActivityRow item={price} onOpen={vi.fn()} />));
-		expect(screen.getByText(/plan_…Q2M9RQ/)).toBeInTheDocument();
-		expect(screen.queryByText(/plan_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
-	});
-
 	it('shows the summary and a change count, never an inline diff', () => {
 		render(wrap(<ActivityRow item={item} onOpen={vi.fn()} />));
 		expect(screen.getByText('Alice paused subscription growth-acme')).toBeInTheDocument();
@@ -109,5 +94,22 @@ describe('ActivityRow', () => {
 		unmount();
 		render(wrap(<ActivityRow item={{ ...item, action: 'subscription.deleted', changes: undefined }} onOpen={vi.fn()} />));
 		expect(screen.getByText('Deleted')).toBeInTheDocument();
+	});
+
+	it('never looks up related records: the list stays free of per-row requests', () => {
+		vi.mocked(useEntityRef).mockClear();
+		const rich = {
+			...item,
+			entity_type: 'price',
+			entity_id: 'price_01HX7KQ2M9RQ',
+			entity_label: 'price_01HX7KQ2M9RQ',
+			customer_id: 'cust_01HXAAAAAAAA',
+			snapshot: { entity_type: 'PLAN', entity_id: 'plan_01HX7KQ2M9RQ' },
+			display: { ...item.display, parts: { ...item.display.parts, entity: 'price_01HX7KQ2M9RQ' } },
+		};
+		render(wrap(<ActivityRow item={rich} onOpen={vi.fn()} />));
+		expect(useEntityRef).not.toHaveBeenCalled();
+		expect(screen.queryByText(/cust_…/)).not.toBeInTheDocument();
+		expect(screen.queryByText(/plan_…/)).not.toBeInTheDocument();
 	});
 });
