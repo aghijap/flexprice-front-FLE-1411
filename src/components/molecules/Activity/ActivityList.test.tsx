@@ -44,10 +44,11 @@ describe('ActivityList', () => {
 			.mockResolvedValueOnce({ items: [mk('a', '2026-10-03'), mk('b', '2026-10-02')], next_cursor: 'c1', has_more: true })
 			.mockResolvedValueOnce({ items: [mk('c', '2026-10-01')], has_more: false });
 		render(wrap(<ActivityList scope={{ kind: 'customer', customerId: 'cust_1' }} pageSize={2} />));
-		await waitFor(() => expect(screen.getByText('row a')).toBeInTheDocument());
+		const rows = () => screen.getAllByText('Alice updated customer Acme');
+		await waitFor(() => expect(rows()).toHaveLength(2));
 		expect(screen.getAllByTestId('activity-day')).toHaveLength(2);
 		screen.getByRole('button', { name: /list.loadMore/i }).click();
-		await waitFor(() => expect(screen.getByText('row c')).toBeInTheDocument());
+		await waitFor(() => expect(rows()).toHaveLength(3));
 		expect(list).toHaveBeenLastCalledWith(expect.objectContaining({ customer_id: 'cust_1', cursor: 'c1', limit: 2 }));
 	});
 

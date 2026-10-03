@@ -39,10 +39,9 @@ const item: ActivityItem = {
 };
 
 describe('ActivityRow', () => {
-	it('renders summary, action chip and single-field inline diff', () => {
+	it('renders the summary and a single-field inline diff, without an action chip', () => {
 		render(wrap(<ActivityRow item={item} onOpen={vi.fn()} />));
-		expect(screen.getByText('Alice paused growth-acme')).toBeInTheDocument();
-		expect(screen.getAllByText('paused').length).toBeGreaterThan(0);
+		expect(screen.getByText('Alice paused subscription growth-acme')).toBeInTheDocument();
 		expect(screen.getByText(/Status/)).toBeInTheDocument();
 	});
 	it('marks redacted fields without values', () => {
@@ -54,7 +53,30 @@ describe('ActivityRow', () => {
 	it('calls onOpen with the id on click', () => {
 		const onOpen = vi.fn();
 		render(wrap(<ActivityRow item={item} onOpen={onOpen} />));
-		screen.getByRole('button', { name: /Alice paused growth-acme/ }).click();
+		screen.getByRole('button', { name: /Alice paused subscription growth-acme/ }).click();
 		expect(onOpen).toHaveBeenCalledWith('act_1');
+	});
+
+	it('shows the short id, not the raw id, when the label is the id', () => {
+		const raw = {
+			...item,
+			entity_id: 'subs_01HX7KQ2M9RQ',
+			entity_label: 'subs_01HX7KQ2M9RQ',
+			display: { ...item.display, parts: { ...item.display.parts, entity: 'subs_01HX7KQ2M9RQ' } },
+		};
+		render(wrap(<ActivityRow item={raw} onOpen={vi.fn()} />));
+		expect(screen.getAllByText(/subs_…Q2M9RQ/).length).toBeGreaterThan(0);
+		expect(screen.queryByText(/subs_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
+	});
+
+	it('renders a single change as an inline before → after diff', () => {
+		render(wrap(<ActivityRow item={item} onOpen={vi.fn()} />));
+		expect(screen.getByText('Status')).toBeInTheDocument();
+		expect(screen.getByText('→')).toBeInTheDocument();
+	});
+
+	it('hides the customer reference when showCustomer is false', () => {
+		render(wrap(<ActivityRow item={{ ...item, customer_id: 'cust_01HXAAAAAAAA' }} onOpen={vi.fn()} showCustomer={false} />));
+		expect(screen.queryByText('cust_…AAAAAA')).not.toBeInTheDocument();
 	});
 });

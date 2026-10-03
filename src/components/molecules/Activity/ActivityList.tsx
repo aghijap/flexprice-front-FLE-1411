@@ -84,7 +84,7 @@ const ActivityList: FC<ActivityListProps> = ({ scope, query, pageSize = 50, comp
 							</div>
 						)}
 						{rows.map((it) => (
-							<ActivityRow key={it.id} item={it} onOpen={open} compact={compact} />
+							<ActivityRow key={it.id} item={it} onOpen={open} compact={compact} showCustomer={!customerId} selected={it.id === openId} />
 						))}
 					</div>
 				))}
