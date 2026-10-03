@@ -49,34 +49,22 @@ describe('summary', () => {
 });
 
 describe('rowDetail', () => {
-	const ch = (label: string, from: unknown, to: unknown, extra: object = {}) => ({ label, from, to, format: 'text', ...extra });
+	const ch = (label: string) => ({ label, from: 1, to: 2, format: 'text' });
 	const withChanges = (changes: ActivityItem['changes'], action = 'invoice.updated') => mk({}, { changes, action });
 
-	it('shows a diff for one short scalar change', () => {
-		const d = rowDetail(withChanges({ status: ch('Status', 'active', 'paused') }));
-		expect(d).toMatchObject({ kind: 'diff', label: 'Status' });
+	it('counts the changes on an update, one or many', () => {
+		expect(rowDetail(withChanges({ status: ch('Status') }))).toEqual({ kind: 'changes', count: 1 });
+		expect(rowDetail(withChanges({ a: ch('A'), b: ch('B'), c: ch('C') }))).toEqual({ kind: 'changes', count: 3 });
 	});
-	it('says the field changed when the value is a JSON blob or long text', () => {
-		expect(rowDetail(withChanges({ metadata: ch('Metadata', null, '{"razorpay_customer_id":"cust_Tj"}') }))).toEqual({
-			kind: 'changed',
-			label: 'Metadata',
-		});
-		expect(rowDetail(withChanges({ note: ch('Note', 'a', 'x'.repeat(60)) }))).toEqual({ kind: 'changed', label: 'Note' });
+	it('counts changes on semantic actions too', () => {
+		expect(rowDetail(withChanges({ status: ch('Status') }, 'subscription.paused'))).toEqual({ kind: 'changes', count: 1 });
 	});
-	it('names the fields when several changed, capped at three', () => {
-		const d = rowDetail(withChanges({ a: ch('A', 1, 2), b: ch('B', 1, 2), c: ch('C', 1, 2), d: ch('D', 1, 2) }));
-		expect(d).toEqual({ kind: 'fields', labels: ['A', 'B', 'C'], more: 1 });
-	});
-	it('describes created, deleted and uncaptured rows', () => {
-		expect(rowDetail(mk({}, { action: 'invoice.created', snapshot: { name: 'x', amount: '5', id: 'i', tenant_id: 't' } }))).toEqual({
-			kind: 'created',
-			count: 2,
-		});
+	it('says created and deleted, with no field detail', () => {
+		expect(rowDetail(mk({}, { action: 'invoice.created', snapshot: { name: 'x' } }))).toEqual({ kind: 'created' });
 		expect(rowDetail(mk({}, { action: 'invoice.deleted' }))).toEqual({ kind: 'deleted' });
-		expect(rowDetail(mk({}, { action: 'invoice.updated' }))).toEqual({ kind: 'notCaptured' });
-		expect(rowDetail(mk({}, { action: 'invoice.finalized' }))).toBeNull();
 	});
-	it('keeps a redacted single change as a diff-less marker', () => {
-		expect(rowDetail(withChanges({ tax_id: ch('Tax id', null, null, { redacted: true }) }))).toEqual({ kind: 'redacted', label: 'Tax id' });
+	it('shows nothing when there is nothing to say', () => {
+		expect(rowDetail(mk({}, { action: 'invoice.updated' }))).toBeNull();
+		expect(rowDetail(mk({}, { action: 'invoice.finalized' }))).toBeNull();
 	});
 });

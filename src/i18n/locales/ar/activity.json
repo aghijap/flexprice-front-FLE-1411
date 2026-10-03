@@ -7,13 +7,10 @@
 		"off": "Off"
 	},
 	"row": {
-		"redactedChanged": "{{field}} changed",
-		"fieldChanged": "{{field}} changed",
-		"more": "+{{count}} more",
-		"createdWith_one": "Created with {{count}} field",
-		"createdWith_other": "Created with {{count}} fields",
-		"deleted": "Record deleted",
-		"notCaptured": "Field changes not captured"
+		"changes_one": "{{count}} change",
+		"changes_other": "{{count}} changes",
+		"created": "Created",
+		"deleted": "Deleted"
 	},
 	"sheet": {
 		"field": "Field",

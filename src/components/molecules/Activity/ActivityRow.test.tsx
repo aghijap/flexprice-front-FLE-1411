@@ -8,7 +8,9 @@ import { ActivityItem } from '@/types/dto/ActivityLog';
 vi.mock('react-i18next', () => ({
 	useTranslation: () => ({
 		t: (key: string, opts?: Record<string, unknown>) => {
-			if (key === 'row.redactedChanged') return `${opts?.field} changed`;
+			if (key === 'row.changes') return opts?.count === 1 ? '1 change' : `${opts?.count} changes`;
+			if (key === 'row.created') return 'Created';
+			if (key === 'row.deleted') return 'Deleted';
 			if (typeof opts?.defaultValue === 'string')
 				return opts.defaultValue.replace(/\{\{(\w+)\}\}/g, (_, k: string) => String(opts[k] ?? ''));
 			return key;
@@ -40,17 +42,6 @@ const item: ActivityItem = {
 };
 
 describe('ActivityRow', () => {
-	it('renders the summary and a single-field inline diff, without an action chip', () => {
-		render(wrap(<ActivityRow item={item} onOpen={vi.fn()} />));
-		expect(screen.getByText('Alice paused subscription growth-acme')).toBeInTheDocument();
-		expect(screen.getByText(/Status/)).toBeInTheDocument();
-	});
-	it('marks redacted fields without values', () => {
-		render(
-			wrap(<ActivityRow item={{ ...item, changes: { tax_id: { redacted: true, label: 'Tax id', format: 'text' } } }} onOpen={vi.fn()} />),
-		);
-		expect(screen.getByText(/Tax id changed/)).toBeInTheDocument();
-	});
 	it('calls onOpen with the id on click', () => {
 		const onOpen = vi.fn();
 		render(wrap(<ActivityRow item={item} onOpen={onOpen} />));
@@ -68,12 +59,6 @@ describe('ActivityRow', () => {
 		render(wrap(<ActivityRow item={raw} onOpen={vi.fn()} />));
 		expect(screen.getAllByText(/subs_…Q2M9RQ/).length).toBeGreaterThan(0);
 		expect(screen.queryByText(/subs_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
-	});
-
-	it('renders a single change as an inline before → after diff', () => {
-		render(wrap(<ActivityRow item={item} onOpen={vi.fn()} />));
-		expect(screen.getByText('Status')).toBeInTheDocument();
-		expect(screen.getByText('→')).toBeInTheDocument();
 	});
 
 	it('hides the customer reference when showCustomer is false', () => {
@@ -94,34 +79,35 @@ describe('ActivityRow', () => {
 		expect(screen.queryByText(/plan_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
 	});
 
-	it('names the changed fields when several changed', () => {
+	it('shows the summary and a change count, never an inline diff', () => {
+		render(wrap(<ActivityRow item={item} onOpen={vi.fn()} />));
+		expect(screen.getByText('Alice paused subscription growth-acme')).toBeInTheDocument();
+		expect(screen.getByText('1 change')).toBeInTheDocument();
+		expect(screen.queryByText('→')).not.toBeInTheDocument();
+	});
+	it('pluralises the change count', () => {
 		const many = {
 			...item,
 			changes: {
-				a: { from: 1, to: 2, label: 'Checkout status', format: 'text' },
-				b: { from: 1, to: 2, label: 'Payment id', format: 'text' },
-				c: { from: 1, to: 2, label: 'Provider result', format: 'text' },
-				d: { from: 1, to: 2, label: 'Extra', format: 'text' },
+				a: { from: 1, to: 2, label: 'A', format: 'text' },
+				b: { from: 1, to: 2, label: 'B', format: 'text' },
 			},
 		};
 		render(wrap(<ActivityRow item={many} onOpen={vi.fn()} />));
-		expect(screen.getByText(/Checkout status, Payment id, Provider result/)).toBeInTheDocument();
-		expect(screen.getByText(/\+1 more/)).toBeInTheDocument();
+		expect(screen.getByText('2 changes')).toBeInTheDocument();
 	});
-
-	it('says a field changed instead of dumping a JSON blob', () => {
-		const blob = {
-			...item,
-			changes: { metadata: { from: null, to: '{"razorpay_customer_id":"cust_Tj"}', label: 'Metadata', format: 'text' } },
-		};
-		render(wrap(<ActivityRow item={blob} onOpen={vi.fn()} />));
-		expect(screen.getByText('Metadata changed')).toBeInTheDocument();
-		expect(screen.queryByText(/razorpay_customer_id/)).not.toBeInTheDocument();
+	it('counts a redacted change without showing values', () => {
+		render(
+			wrap(<ActivityRow item={{ ...item, changes: { tax_id: { redacted: true, label: 'Tax id', format: 'text' } } }} onOpen={vi.fn()} />),
+		);
+		expect(screen.getByText('1 change')).toBeInTheDocument();
 	});
-
-	it('describes a created row by how many fields it recorded', () => {
-		const created = { ...item, action: 'subscription.created', changes: undefined, snapshot: { name: 'x', amount: '5' } };
-		render(wrap(<ActivityRow item={created} onOpen={vi.fn()} />));
-		expect(screen.getByText('Created with 2 fields')).toBeInTheDocument();
+	it('says Created or Deleted for those rows', () => {
+		const created = { ...item, action: 'subscription.created', changes: undefined, snapshot: { name: 'x' } };
+		const { unmount } = render(wrap(<ActivityRow item={created} onOpen={vi.fn()} />));
+		expect(screen.getByText('Created')).toBeInTheDocument();
+		unmount();
+		render(wrap(<ActivityRow item={{ ...item, action: 'subscription.deleted', changes: undefined }} onOpen={vi.fn()} />));
+		expect(screen.getByText('Deleted')).toBeInTheDocument();
 	});
 });

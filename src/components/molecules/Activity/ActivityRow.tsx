@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { ActivityItem } from '@/types/dto/ActivityLog';
 import ActorBadge from './ActorBadge';
-import { EntityRef, FormattedValue } from './formatters';
+import { EntityRef } from './formatters';
 import { shortId } from './entityRegistry';
 import { parentRef } from './snapshot';
 import { entityTitle, rowDetail, summaryOf } from './summary';
@@ -56,41 +56,9 @@ const ActivityRow: FC<Props> = ({ item, onOpen, compact, showCustomer = true, se
 					{!compact && showCustomer && item.customer_id && item.entity_type !== 'customer' && (
 						<EntityRef type='customer' id={item.customer_id} />
 					)}
-					{detail?.kind === 'diff' && (
-						<span className='inline-flex flex-wrap items-center gap-1'>
-							{detail.label}
-							<span className='line-through text-red-700 dark:text-red-400'>
-								<FormattedValue
-									value={detail.change.from}
-									format={detail.change.format}
-									siblings={item.snapshot}
-									customerId={item.customer_id}
-								/>
-							</span>
-							<span aria-hidden>→</span>
-							<span className='text-green-700 dark:text-green-400'>
-								<FormattedValue
-									value={detail.change.to}
-									format={detail.change.format}
-									siblings={item.snapshot}
-									customerId={item.customer_id}
-								/>
-							</span>
-						</span>
-					)}
-					{detail?.kind === 'changed' && <span>{t('row.fieldChanged', { field: detail.label, defaultValue: '{{field}} changed' })}</span>}
-					{detail?.kind === 'redacted' && <span>{t('row.redactedChanged', { field: detail.label })}</span>}
-					{detail?.kind === 'fields' && (
-						<span>
-							{detail.labels.join(', ')}
-							{detail.more > 0 && ` ${t('row.more', { count: detail.more, defaultValue: '+{{count}} more' })}`}
-						</span>
-					)}
-					{detail?.kind === 'created' && (
-						<span>{t('row.createdWith', { count: detail.count, defaultValue: 'Created with {{count}} fields' })}</span>
-					)}
-					{detail?.kind === 'deleted' && <span>{t('row.deleted', { defaultValue: 'Record deleted' })}</span>}
-					{detail?.kind === 'notCaptured' && <span>{t('row.notCaptured', { defaultValue: 'Field changes not captured' })}</span>}
+					{detail?.kind === 'changes' && <span>{t('row.changes', { count: detail.count })}</span>}
+					{detail?.kind === 'created' && <span>{t('row.created')}</span>}
+					{detail?.kind === 'deleted' && <span>{t('row.deleted')}</span>}
 				</span>
 			</span>
 			<span className='text-content-muted text-xs tabular-nums whitespace-nowrap'>{timeOf(item.occurred_at)}</span>
