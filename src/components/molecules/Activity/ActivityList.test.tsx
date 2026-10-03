@@ -25,7 +25,7 @@ const mk = (id: string, day: string): ActivityItem => ({
 	display: {
 		summary: `row ${id}`,
 		entity_label: 'Acme',
-		parts: { actor: 'Alice', verb: 'updated', entity_type: 'customer', entity: 'Acme', field: null, count: 0 },
+		parts: { actor: 'Alice', verb: 'updated', entity_type: 'customer', entity: 'Acme' },
 	},
 });
 

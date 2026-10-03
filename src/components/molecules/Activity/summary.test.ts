@@ -22,7 +22,7 @@ const mk = (over: Partial<ActivityItem['display']['parts']> = {}, item: Partial<
 	display: {
 		summary: 'Alice created invoice inv_01HX7KQ2M9RQ',
 		entity_label: 'inv_01HX7KQ2M9RQ',
-		parts: { actor: 'Alice', verb: 'created', entity_type: 'invoice', entity: 'inv_01HX7KQ2M9RQ', field: null, count: 0, ...over },
+		parts: { actor: 'Alice', verb: 'created', entity_type: 'invoice', entity: 'inv_01HX7KQ2M9RQ', ...over },
 	},
 	...item,
 });

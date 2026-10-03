@@ -40,7 +40,7 @@ const item: ActivityItem = {
 	display: {
 		summary: 'Alice paused growth-acme',
 		entity_label: 'growth-acme',
-		parts: { actor: 'Alice', verb: 'paused', entity_type: 'subscription', entity: 'growth-acme', field: null, count: 1 },
+		parts: { actor: 'Alice', verb: 'paused', entity_type: 'subscription', entity: 'growth-acme' },
 	},
 };
 

@@ -47,10 +47,6 @@ export const ActivityItemSchema = z.object({
 			verb: z.string(),
 			entity_type: z.string(),
 			entity: z.string(),
-			field: z.string().nullable().optional(),
-			from: z.unknown().optional(),
-			to: z.unknown().optional(),
-			count: z.number(),
 		}),
 	}),
 });

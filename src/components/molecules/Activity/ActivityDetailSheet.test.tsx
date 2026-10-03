@@ -29,7 +29,7 @@ const item: ActivityItem = {
 	display: {
 		summary: 'Billing Sync changed the plan on growth-acme',
 		entity_label: 'growth-acme',
-		parts: { actor: 'Billing Sync', verb: 'plan_changed', entity_type: 'subscription', entity: 'growth-acme', field: 'plan_id', count: 1 },
+		parts: { actor: 'Billing Sync', verb: 'plan_changed', entity_type: 'subscription', entity: 'growth-acme' },
 	},
 };
 
@@ -103,7 +103,7 @@ describe('ActivityDetailSheet', () => {
 			snapshot: { entity_type: 'PLAN', entity_id: 'plan_01HX7KQ2M9RQ' },
 			display: {
 				...item.display,
-				parts: { ...item.display.parts, verb: 'created', entity_type: 'price', entity: 'Storage', field: null, count: 0 },
+				parts: { ...item.display.parts, verb: 'created', entity_type: 'price', entity: 'Storage' },
 			},
 		};
 		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
