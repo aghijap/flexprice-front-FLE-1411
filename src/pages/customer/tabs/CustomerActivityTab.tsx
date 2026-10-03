@@ -48,7 +48,7 @@ const CustomerActivityTab = () => {
 	return (
 		<Card>
 			<CardHeader
-				title={t('page.title')}
+				title={t('tab.title')}
 				cta={
 					<Link to={`${RouteNames.activity}?customer_id=${customerId}`} className='text-sm text-content-link hover:underline'>
 						{t('openInLog')}

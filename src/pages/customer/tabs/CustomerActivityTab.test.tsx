@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter, Routes, Route } from 'react-router';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
@@ -51,5 +51,13 @@ describe('CustomerActivityTab', () => {
 		await waitFor(() => expect(list).toHaveBeenCalled());
 		expect(list.mock.calls[0][0]).toEqual(expect.objectContaining({ customer_id: 'cust_1' }));
 		expect(list.mock.calls[0][0].entity_type).toBeUndefined();
+	});
+
+	it('defaults the entity dropdown to All related and titles the card Activity', async () => {
+		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
+		render(wrap(<CustomerActivityTab />));
+		expect(await screen.findByText('scope.allRelated')).toBeInTheDocument();
+		expect(screen.getByText('tab.title')).toBeInTheDocument();
+		expect(screen.queryByText(/cust_…/)).not.toBeInTheDocument();
 	});
 });
