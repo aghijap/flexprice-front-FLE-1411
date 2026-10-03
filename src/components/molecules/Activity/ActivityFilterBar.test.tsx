@@ -33,4 +33,8 @@ describe('ActivityFilterBar', () => {
 		screen.getByRole('button', { name: 'filters.removeCustomer' }).click();
 		expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ customerId: '' }));
 	});
+	it('shows the default last-30-days range instead of the empty placeholder', () => {
+		render(wrap(<ActivityFilterBar value={defaultFilters()} onChange={vi.fn()} onClear={vi.fn()} />));
+		expect(screen.queryByText('Select Range')).not.toBeInTheDocument();
+	});
 });

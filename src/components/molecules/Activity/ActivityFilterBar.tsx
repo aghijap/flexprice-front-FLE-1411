@@ -102,7 +102,7 @@ const ActivityFilterBar: FC<Props> = ({ value, onChange, onClear }) => {
 					</div>
 				) : (
 					<Input
-						className='h-7 border-0 shadow-none px-1 w-[200px]'
+						className='h-7 border-0 bg-transparent shadow-none px-1 w-[200px]'
 						disabled={!value.entityType}
 						placeholder={value.entityType ? t('filters.entityIdPlaceholder') : t('filters.pickTypeFirst')}
 						value={value.entityId}
@@ -135,8 +135,9 @@ const ActivityFilterBar: FC<Props> = ({ value, onChange, onClear }) => {
 			<Pill label={t('filters.date')}>
 				<DateRangePicker
 					startDate={value.start}
-					endDate={value.end}
-					popoverTriggerClassName='h-7 border-0 shadow-none px-1'
+					// An open-ended range runs to now; the picker only renders a label when it has both ends.
+					endDate={value.end ?? (value.start ? new Date() : undefined)}
+					className='!h-7 w-auto border-0 bg-transparent px-1 shadow-none'
 					onChange={({ startDate, endDate }) => onChange(withRange(value, startDate, endDate))}
 				/>
 			</Pill>
