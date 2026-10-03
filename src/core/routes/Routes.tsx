@@ -26,6 +26,7 @@ import {
 	CustomerOverviewTab as Overview,
 	CustomerAnalyticsTab as AnalyticsTab,
 	CustomerWalletTab as WalletTab,
+	CustomerActivityTab,
 	CustomerSubscriptionDetailsPage,
 	CustomerSubscriptionEditPage,
 	AddCreditNotePage as AddCreditPage,
@@ -522,6 +523,10 @@ export const MainRouter: any = createBrowserRouter([
 							{
 								path: 'analytics',
 								element: <AnalyticsTab />,
+							},
+							{
+								path: 'activity',
+								element: <CustomerActivityTab />,
 							},
 
 							{
