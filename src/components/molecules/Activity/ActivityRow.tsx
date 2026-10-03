@@ -6,7 +6,7 @@ import ActorBadge from './ActorBadge';
 import { EntityRef, FormattedValue } from './formatters';
 import { shortId } from './entityRegistry';
 import { parentRef } from './snapshot';
-import { entityTitle, summaryOf } from './summary';
+import { entityTitle, rowDetail, summaryOf } from './summary';
 import { timeOf } from './time';
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -25,8 +25,7 @@ interface Props {
 
 const ActivityRow: FC<Props> = ({ item, onOpen, compact, showCustomer = true, selected }) => {
 	const { t } = useTranslation('activity');
-	const entries = Object.entries(item.changes ?? {});
-	const single = entries.length === 1 ? entries[0][1] : null;
+	const detail = rowDetail(item);
 	const entityType = t(`entity.${item.entity_type}`, { defaultValue: item.entity_type.replace(/_/g, ' ') });
 	const parent = parentRef(item.snapshot);
 	const titleIsShortId = entityTitle(item) === shortId(item.entity_id);
@@ -57,22 +56,41 @@ const ActivityRow: FC<Props> = ({ item, onOpen, compact, showCustomer = true, se
 					{!compact && showCustomer && item.customer_id && item.entity_type !== 'customer' && (
 						<EntityRef type='customer' id={item.customer_id} />
 					)}
-					{single &&
-						(single.redacted ? (
-							<span>{t('row.redactedChanged', { field: single.label })}</span>
-						) : (
-							<span className='inline-flex flex-wrap items-center gap-1'>
-								{single.label}
-								<span className='line-through text-red-700 dark:text-red-400'>
-									<FormattedValue value={single.from} format={single.format} siblings={item.snapshot} customerId={item.customer_id} />
-								</span>
-								<span aria-hidden>→</span>
-								<span className='text-green-700 dark:text-green-400'>
-									<FormattedValue value={single.to} format={single.format} siblings={item.snapshot} customerId={item.customer_id} />
-								</span>
+					{detail?.kind === 'diff' && (
+						<span className='inline-flex flex-wrap items-center gap-1'>
+							{detail.label}
+							<span className='line-through text-red-700 dark:text-red-400'>
+								<FormattedValue
+									value={detail.change.from}
+									format={detail.change.format}
+									siblings={item.snapshot}
+									customerId={item.customer_id}
+								/>
 							</span>
-						))}
-					{entries.length > 1 && <span>{t('row.fieldsChanged', { count: entries.length })}</span>}
+							<span aria-hidden>→</span>
+							<span className='text-green-700 dark:text-green-400'>
+								<FormattedValue
+									value={detail.change.to}
+									format={detail.change.format}
+									siblings={item.snapshot}
+									customerId={item.customer_id}
+								/>
+							</span>
+						</span>
+					)}
+					{detail?.kind === 'changed' && <span>{t('row.fieldChanged', { field: detail.label, defaultValue: '{{field}} changed' })}</span>}
+					{detail?.kind === 'redacted' && <span>{t('row.redactedChanged', { field: detail.label })}</span>}
+					{detail?.kind === 'fields' && (
+						<span>
+							{detail.labels.join(', ')}
+							{detail.more > 0 && ` ${t('row.more', { count: detail.more, defaultValue: '+{{count}} more' })}`}
+						</span>
+					)}
+					{detail?.kind === 'created' && (
+						<span>{t('row.createdWith', { count: detail.count, defaultValue: 'Created with {{count}} fields' })}</span>
+					)}
+					{detail?.kind === 'deleted' && <span>{t('row.deleted', { defaultValue: 'Record deleted' })}</span>}
+					{detail?.kind === 'notCaptured' && <span>{t('row.notCaptured', { defaultValue: 'Field changes not captured' })}</span>}
 				</span>
 			</span>
 			<span className='text-content-muted text-xs tabular-nums whitespace-nowrap'>{timeOf(item.occurred_at)}</span>

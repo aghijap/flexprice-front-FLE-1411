@@ -9,7 +9,8 @@ vi.mock('react-i18next', () => ({
 	useTranslation: () => ({
 		t: (key: string, opts?: Record<string, unknown>) => {
 			if (key === 'row.redactedChanged') return `${opts?.field} changed`;
-			if (typeof opts?.defaultValue === 'string') return opts.defaultValue;
+			if (typeof opts?.defaultValue === 'string')
+				return opts.defaultValue.replace(/\{\{(\w+)\}\}/g, (_, k: string) => String(opts[k] ?? ''));
 			return key;
 		},
 	}),
@@ -91,5 +92,36 @@ describe('ActivityRow', () => {
 		render(wrap(<ActivityRow item={price} onOpen={vi.fn()} />));
 		expect(screen.getByText(/plan_…Q2M9RQ/)).toBeInTheDocument();
 		expect(screen.queryByText(/plan_01HX7KQ2M9RQ/)).not.toBeInTheDocument();
+	});
+
+	it('names the changed fields when several changed', () => {
+		const many = {
+			...item,
+			changes: {
+				a: { from: 1, to: 2, label: 'Checkout status', format: 'text' },
+				b: { from: 1, to: 2, label: 'Payment id', format: 'text' },
+				c: { from: 1, to: 2, label: 'Provider result', format: 'text' },
+				d: { from: 1, to: 2, label: 'Extra', format: 'text' },
+			},
+		};
+		render(wrap(<ActivityRow item={many} onOpen={vi.fn()} />));
+		expect(screen.getByText(/Checkout status, Payment id, Provider result/)).toBeInTheDocument();
+		expect(screen.getByText(/\+1 more/)).toBeInTheDocument();
+	});
+
+	it('says a field changed instead of dumping a JSON blob', () => {
+		const blob = {
+			...item,
+			changes: { metadata: { from: null, to: '{"razorpay_customer_id":"cust_Tj"}', label: 'Metadata', format: 'text' } },
+		};
+		render(wrap(<ActivityRow item={blob} onOpen={vi.fn()} />));
+		expect(screen.getByText('Metadata changed')).toBeInTheDocument();
+		expect(screen.queryByText(/razorpay_customer_id/)).not.toBeInTheDocument();
+	});
+
+	it('describes a created row by how many fields it recorded', () => {
+		const created = { ...item, action: 'subscription.created', changes: undefined, snapshot: { name: 'x', amount: '5' } };
+		render(wrap(<ActivityRow item={created} onOpen={vi.fn()} />));
+		expect(screen.getByText('Created with 2 fields')).toBeInTheDocument();
 	});
 });
