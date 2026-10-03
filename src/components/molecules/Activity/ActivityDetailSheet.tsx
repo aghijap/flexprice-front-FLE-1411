@@ -11,6 +11,7 @@ import ChangesTable from './ChangesTable';
 import { EntityRef, FormattedValue } from './formatters';
 import ActivityList from './ActivityList';
 import { verbOf } from './ActivityRow';
+import { snapshotRows } from './snapshot';
 import { summaryOf } from './summary';
 
 interface Props {
@@ -36,8 +37,6 @@ const KeyValueGrid: FC<{ children: ReactNode }> = ({ children }) => (
 
 // The shared axios client rejects with an Error carrying `.status`; raw axios errors carry `response.status`.
 const isNotFound = (e: unknown) => getHttpStatus(e) === 404 || (e as { response?: { status?: number } } | null)?.response?.status === 404;
-
-const snapshotText = (v: unknown) => (v === null || v === undefined ? '—' : typeof v === 'string' ? v : JSON.stringify(v));
 
 const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded }) => {
 	const { t } = useTranslation('activity');
@@ -112,10 +111,16 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 					{hasChanges && it.changes && <ChangesTable changes={it.changes} siblings={it.snapshot} customerId={ctxCustomer} />}
 					{verb === 'created' && it.snapshot && (
 						<KeyValueGrid>
-							{Object.entries(it.snapshot).map(([k, v]) => (
-								<Fragment key={k}>
-									<span className='text-content-muted'>{k.replace(/_/g, ' ')}</span>
-									<span className='break-all'>{snapshotText(v)}</span>
+							{snapshotRows(it.snapshot).map((r) => (
+								<Fragment key={r.key}>
+									<span className='text-content-muted'>{r.label}</span>
+									{r.format === 'redacted' ? (
+										<span className='italic text-content-muted'>{t('sheet.redacted')}</span>
+									) : (
+										<span className='break-all'>
+											<FormattedValue value={r.value} format={r.format} siblings={it.snapshot} customerId={ctxCustomer} />
+										</span>
+									)}
 								</Fragment>
 							))}
 						</KeyValueGrid>
