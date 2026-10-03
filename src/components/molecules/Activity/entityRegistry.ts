@@ -49,6 +49,7 @@ export const labelFor = (type: string, fields: Fields): string => {
 	return l || shortId(str(fields, 'id'));
 };
 
+// Callers pass arrow wrappers: the API classes use `this.baseUrl`, so an unbound static method throws.
 const resolveWith =
 	<T>(type: string, fetch: (id: string) => Promise<T>, pick: (r: T) => Fields) =>
 	async (id: string) => {
@@ -60,7 +61,11 @@ export const ENTITY_REGISTRY: Record<string, EntityDefinition> = {
 	customer: {
 		icon: User,
 		route: (id) => `${RouteNames.customers}/${id}`,
-		resolve: resolveWith('customer', CustomerApi.getCustomerById, (r) => r as unknown as Fields),
+		resolve: resolveWith(
+			'customer',
+			(id) => CustomerApi.getCustomerById(id),
+			(r) => r as unknown as Fields,
+		),
 	},
 	subscription: {
 		icon: Repeat,
@@ -81,27 +86,47 @@ export const ENTITY_REGISTRY: Record<string, EntityDefinition> = {
 	wallet: {
 		icon: Wallet,
 		route: (id, ctx) => (ctx?.customerId ? `${RouteNames.customers}/${ctx.customerId}/wallet?activeWalletId=${id}` : null),
-		resolve: resolveWith('wallet', WalletApi.getWalletById, (r) => r as unknown as Fields),
+		resolve: resolveWith(
+			'wallet',
+			(id) => WalletApi.getWalletById(id),
+			(r) => r as unknown as Fields,
+		),
 	},
 	invoice: {
 		icon: FileText,
 		route: (id, ctx) => (ctx?.customerId ? `${RouteNames.customers}/${ctx.customerId}/invoice/${id}` : `${RouteNames.invoices}/${id}`),
-		resolve: resolveWith('invoice', InvoiceApi.getInvoiceById, (r) => r as unknown as Fields),
+		resolve: resolveWith(
+			'invoice',
+			(id) => InvoiceApi.getInvoiceById(id),
+			(r) => r as unknown as Fields,
+		),
 	},
 	plan: {
 		icon: Layers2,
 		route: (id) => `${RouteNames.plan}/${id}`,
-		resolve: resolveWith('plan', PlanApi.getPlanById, (r) => r as unknown as Fields),
+		resolve: resolveWith(
+			'plan',
+			(id) => PlanApi.getPlanById(id),
+			(r) => r as unknown as Fields,
+		),
 	},
 	price: {
 		icon: Tag,
 		route: () => null,
-		resolve: resolveWith('price', PriceApi.getPriceById, (r) => r as unknown as Fields),
+		resolve: resolveWith(
+			'price',
+			(id) => PriceApi.getPriceById(id),
+			(r) => r as unknown as Fields,
+		),
 	},
 	payment: {
 		icon: CreditCard,
 		route: (id) => `${RouteNames.payments}/${id}`,
-		resolve: resolveWith('payment', PaymentApi.getPaymentById, (r) => r as unknown as Fields),
+		resolve: resolveWith(
+			'payment',
+			(id) => PaymentApi.getPaymentById(id),
+			(r) => r as unknown as Fields,
+		),
 	},
 };
 
