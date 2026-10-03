@@ -31,13 +31,17 @@
 		"context": "Context",
 		"customer": "Customer",
 		"related": "Related changes in this request",
-		"noRelated": "No other changes in this request."
+		"noRelated": "No other changes in this request.",
+		"eyebrow": "Activity · {{id}}",
+		"subscription": "Subscription"
 	},
 	"list": {
 		"error": "Could not load activity.",
 		"retry": "Retry",
-		"empty": "No activity yet.",
-		"loadMore": "Load more"
+		"empty": "No activity in this range.",
+		"loadMore": "Load more",
+		"today": "Today · {{date}}",
+		"yesterday": "Yesterday · {{date}}"
 	},
 	"verb": {
 		"created": "{{actor}} created {{entityType}} {{entity}}",
@@ -52,34 +56,37 @@
 		"paid": "{{actor}} marked {{entityType}} {{entity}} paid"
 	},
 	"entity": {
-		"customer": "customer",
-		"subscription": "subscription",
-		"wallet": "wallet",
-		"invoice": "invoice",
-		"plan": "plan",
-		"price": "price",
-		"payment": "payment",
-		"wallet_transaction": "wallet transaction",
-		"entitlement_grant": "entitlement grant",
-		"invoice_line_item": "invoice line item",
-		"subscription_line_item": "subscription line item",
-		"payment_method": "payment method",
-		"refund": "refund",
-		"credit_note": "credit note",
-		"checkout_session": "checkout session",
-		"subscription_phase": "subscription phase",
-		"subscription_schedule": "subscription schedule",
-		"subscription_pause": "subscription pause",
-		"credit_grant": "credit grant",
-		"credit_grant_application": "credit grant application",
-		"coupon_association": "coupon association",
-		"coupon_application": "coupon application",
-		"addon_association": "addon association",
-		"tax_association": "tax association"
+		"customer": "Customer",
+		"subscription": "Subscription",
+		"wallet": "Wallet",
+		"invoice": "Invoice",
+		"plan": "Plan",
+		"price": "Price",
+		"payment": "Payment",
+		"wallet_transaction": "Wallet transaction",
+		"entitlement_grant": "Entitlement grant",
+		"invoice_line_item": "Invoice line item",
+		"subscription_line_item": "Subscription line item",
+		"payment_method": "Payment method",
+		"refund": "Refund",
+		"credit_note": "Credit note",
+		"checkout_session": "Checkout session",
+		"subscription_phase": "Subscription phase",
+		"subscription_schedule": "Subscription schedule",
+		"subscription_pause": "Subscription pause",
+		"credit_grant": "Credit grant",
+		"credit_grant_application": "Credit grant application",
+		"coupon_association": "Coupon association",
+		"coupon_application": "Coupon application",
+		"addon_association": "Addon association",
+		"tax_association": "Tax association"
 	},
 	"page": {
 		"title": "Activity Log",
-		"subtitle": "Every change to customers, subscriptions, invoices, wallets and more, with who made it and what changed."
+		"subtitle": "Who changed what in this environment. Activity is kept for 90 days."
+	},
+	"tab": {
+		"title": "Activity"
 	},
 	"toggle": {
 		"hideSystem": "Hide system changes"
@@ -87,13 +94,18 @@
 	"filters": {
 		"entityType": "Entity type",
 		"entity": "Entity",
-		"entityId": "Entity ID",
-		"actions": "Actions",
-		"actorType": "Actor type",
-		"actorId": "Actor ID",
-		"customerId": "Customer ID",
-		"requestId": "Request ID",
-		"occurredAt": "Occurred at"
+		"entitySearch": "Search…",
+		"entityIdPlaceholder": "Paste an ID",
+		"pickTypeFirst": "Pick a type first",
+		"actor": "Actor",
+		"action": "Action",
+		"date": "Date",
+		"any": "Any",
+		"customer": "Customer",
+		"request": "Request",
+		"removeCustomer": "Remove customer filter",
+		"removeRequest": "Remove request filter",
+		"clear": "Clear"
 	},
 	"actor": {
 		"user": "User",
@@ -102,8 +114,7 @@
 		"customer_portal": "Customer portal"
 	},
 	"scope": {
-		"allRelated": "All related",
-		"customerOnly": "Customer only"
+		"allRelated": "All related"
 	},
 	"openInLog": "Open in activity log"
 }
