@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Page, Toggle } from '@/components/atoms';
 import { ActivityList } from '@/components/molecules/Activity';
@@ -15,19 +16,32 @@ const readHideSystem = () => {
 	}
 };
 
-const initialConditions = (): FilterCondition[] => [
-	{
-		id: 'occurred_at_after',
-		field: 'occurred_at',
-		operator: FilterOperator.AFTER,
-		dataType: DataType.DATE,
-		valueDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-	},
-];
+export const initialConditions = (customerId?: string | null): FilterCondition[] => {
+	const conditions: FilterCondition[] = [
+		{
+			id: 'occurred_at_after',
+			field: 'occurred_at',
+			operator: FilterOperator.AFTER,
+			dataType: DataType.DATE,
+			valueDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+		},
+	];
+	if (customerId) {
+		conditions.push({
+			id: 'customer_id',
+			field: 'customer_id',
+			operator: FilterOperator.EQUAL,
+			dataType: DataType.STRING,
+			valueString: customerId,
+		});
+	}
+	return conditions;
+};
 
 const ActivityLogPage = () => {
 	const { t } = useTranslation('activity');
-	const [conditions, setConditions] = useState<FilterCondition[]>(initialConditions);
+	const [searchParams] = useSearchParams();
+	const [conditions, setConditions] = useState<FilterCondition[]>(() => initialConditions(searchParams.get('customer_id')));
 	const [hideSystem, setHideSystem] = useState(readHideSystem);
 
 	const query = useMemo(

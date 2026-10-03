@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, MouseEvent as ReactMouseEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { Chip, Tooltip, CopyIdButton } from '@/components/atoms';
@@ -21,10 +21,12 @@ export const EntityRef: FC<{ type: string; id: string; customerId?: string }> = 
 	const def = getEntityDef(type);
 	if (isLoading) return <span className='text-content-muted'>{shortId(id)}</span>;
 	const label = data?.label ?? shortId(id);
-	const href = data?.exists ? def?.route(id, { customerId }) : null;
+	const href = data?.state === 'exists' ? (def?.route(id, { customerId }) ?? null) : null;
+	// Stop clicks on the link/copy button from bubbling to an enclosing clickable row.
+	const stop = (e: ReactMouseEvent) => e.stopPropagation();
 	return (
 		<Tooltip content={id}>
-			<span className='inline-flex items-center gap-1'>
+			<span className='inline-flex items-center gap-1' onClick={stop}>
 				{href ? (
 					<Link to={href} className='text-content-link font-medium hover:underline'>
 						{label}
@@ -32,7 +34,7 @@ export const EntityRef: FC<{ type: string; id: string; customerId?: string }> = 
 				) : (
 					<span>{label}</span>
 				)}
-				{data && !data.exists && <Chip label={t('ref.deleted')} variant='default' />}
+				{data?.state === 'deleted' && <Chip label={t('ref.deleted')} variant='default' />}
 				<CopyIdButton id={id} />
 			</span>
 		</Tooltip>

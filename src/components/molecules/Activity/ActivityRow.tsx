@@ -32,9 +32,16 @@ const ActivityRow: FC<Props> = ({ item, onOpen, compact }) => {
 	const entityType = t(`entity.${parts.entity_type}`, { defaultValue: parts.entity_type.replace(/_/g, ' ') });
 	const summary = t(`verb.${parts.verb}`, { ...parts, entityType, defaultValue: item.display.summary });
 	return (
-		<button
-			type='button'
+		<div
+			role='button'
+			tabIndex={0}
 			onClick={() => onOpen(item.id)}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					onOpen(item.id);
+				}
+			}}
 			className={cn(
 				'w-full text-left grid grid-cols-[auto_1fr_auto] gap-3 items-start rounded-md border border-transparent hover:bg-surface-faint hover:border-line px-2',
 				compact ? 'py-1.5' : 'py-2',
@@ -67,7 +74,7 @@ const ActivityRow: FC<Props> = ({ item, onOpen, compact }) => {
 				</span>
 			</span>
 			<span className='text-content-muted text-xs tabular-nums whitespace-nowrap'>{timeOf(item.occurred_at)}</span>
-		</button>
+		</div>
 	);
 };
 

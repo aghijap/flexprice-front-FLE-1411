@@ -43,16 +43,36 @@ describe('EntityRef', () => {
 		render(wrap(<EntityRef type='customer' id='cust_01HXABCDEF' />));
 		await waitFor(() => expect(screen.getByRole('link', { name: 'Acme' })).toHaveAttribute('href', '/billing/customers/cust_01HXABCDEF'));
 	});
-	it('shows short id and deleted chip when the resolver rejects', async () => {
+	it('shows short id and deleted chip only on a 404', async () => {
 		vi.spyOn(registry, 'getEntityDef').mockReturnValue({
 			icon: User,
 			route: () => null,
 			resolve: async () => {
-				throw new Error('404');
+				throw Object.assign(new Error('not found'), { status: 404 });
 			},
 		});
 		render(wrap(<EntityRef type='customer' id='cust_01HXABCDEF' />));
 		await waitFor(() => expect(screen.getByText('deleted')).toBeInTheDocument());
 		expect(screen.getByText('cust_…ABCDEF')).toBeInTheDocument();
+	});
+
+	it('shows no deleted chip for an unknown entity type', async () => {
+		vi.spyOn(registry, 'getEntityDef').mockReturnValue(undefined);
+		render(wrap(<EntityRef type='mystery' id='mys_01HXABCDEF' />));
+		await waitFor(() => expect(screen.getByText('mys_…ABCDEF')).toBeInTheDocument());
+		expect(screen.queryByText('deleted')).not.toBeInTheDocument();
+	});
+
+	it('shows no deleted chip on a transient (non-404) error', async () => {
+		vi.spyOn(registry, 'getEntityDef').mockReturnValue({
+			icon: User,
+			route: () => null,
+			resolve: async () => {
+				throw Object.assign(new Error('server error'), { status: 500 });
+			},
+		});
+		render(wrap(<EntityRef type='customer' id='cust_01HXABCDEF' />));
+		await waitFor(() => expect(screen.getByText('cust_…ABCDEF')).toBeInTheDocument());
+		expect(screen.queryByText('deleted')).not.toBeInTheDocument();
 	});
 });
