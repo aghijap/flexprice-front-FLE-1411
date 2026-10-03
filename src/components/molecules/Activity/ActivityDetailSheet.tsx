@@ -11,6 +11,7 @@ import ChangesTable from './ChangesTable';
 import { EntityRef, FormattedValue } from './formatters';
 import ActivityList from './ActivityList';
 import { verbOf } from './ActivityRow';
+import { summaryOf } from './summary';
 
 interface Props {
 	id: string;
@@ -60,9 +61,7 @@ const ActivityDetailSheet: FC<Props> = ({ id, open, onClose, customerId, loaded 
 
 	const renderBody = (it: ActivityItem) => {
 		const verb = verbOf(it.action);
-		const parts = it.display.parts;
-		const entityType = t(`entity.${parts.entity_type}`, { defaultValue: parts.entity_type.replace(/_/g, ' ') });
-		const summary = t(`verb.${parts.verb}`, { ...parts, entityType, defaultValue: it.display.summary });
+		const summary = summaryOf(it, t);
 		const hasChanges = !!it.changes && Object.keys(it.changes).length > 0;
 		const metadata = Object.entries(it.metadata ?? {}).filter(([k]) => k !== 'degraded');
 		const degraded = it.metadata?.degraded?.value;

@@ -45,7 +45,7 @@ describe('ActivityDetailSheet', () => {
 		const get = vi.spyOn(ActivityApi, 'get');
 		const list = vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
 		render(wrap(<ActivityDetailSheet open id='act_9' onClose={vi.fn()} loaded={[item]} />));
-		expect(screen.getByText('Billing Sync changed the plan on growth-acme')).toBeInTheDocument();
+		expect(screen.getByText('Billing Sync plan changed subscription growth-acme')).toBeInTheDocument();
 		expect(screen.getByText('Billing Sync')).toBeInTheDocument();
 		expect(screen.getByText('req_1')).toBeInTheDocument();
 		expect(screen.getByText('Plan')).toBeInTheDocument();
@@ -58,7 +58,7 @@ describe('ActivityDetailSheet', () => {
 		const get = vi.spyOn(ActivityApi, 'get').mockResolvedValue(item);
 		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
 		render(wrap(<ActivityDetailSheet open id='act_9' onClose={vi.fn()} loaded={[]} />));
-		await waitFor(() => expect(screen.getByText('Billing Sync changed the plan on growth-acme')).toBeInTheDocument());
+		await waitFor(() => expect(screen.getByText('Billing Sync plan changed subscription growth-acme')).toBeInTheDocument());
 		expect(get).toHaveBeenCalledWith('act_9');
 	});
 
