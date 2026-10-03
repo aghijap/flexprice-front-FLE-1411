@@ -1,28 +1,14 @@
+/** Entity types offered in the filter: the v1 set, each with known actions (the API needs entity_type + entity_id together). */
 export const ACTIVITY_ENTITY_TYPES = [
 	'customer',
 	'subscription',
+	'invoice',
 	'wallet',
 	'wallet_transaction',
 	'entitlement_grant',
-	'invoice',
-	'invoice_line_item',
-	'subscription_line_item',
-	'payment',
-	'payment_method',
-	'refund',
-	'credit_note',
-	'checkout_session',
-	'subscription_phase',
-	'subscription_schedule',
-	'subscription_pause',
-	'credit_grant',
-	'credit_grant_application',
-	'coupon_association',
-	'coupon_application',
-	'addon_association',
-	'tax_association',
 	'plan',
 	'price',
+	'payment',
 ] as const;
 
 export const ACTIVITY_ACTIONS = [
