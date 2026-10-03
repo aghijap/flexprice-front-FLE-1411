@@ -12,6 +12,9 @@ export const ACTIVITY_ENTITY_TYPES = [
 	'checkout_session',
 ] as const;
 
+/** Types that carry a customer, so they can appear on a customer's own timeline (plans and prices cannot). */
+export const ACTIVITY_CUSTOMER_ENTITY_TYPES = ACTIVITY_ENTITY_TYPES.filter((t) => t !== 'plan' && t !== 'price');
+
 export const ACTIVITY_ACTIONS = [
 	'customer.created',
 	'customer.updated',

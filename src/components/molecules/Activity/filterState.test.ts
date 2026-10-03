@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionsFor, defaultFilters, filtersToQuery, needsEntity, withEntityType, withRange } from './filterState';
+import { actionsFor, defaultFilters, entityTypeQuery, filtersToQuery, needsEntity, withEntityType, withRange } from './filterState';
 
 const now = new Date(2026, 9, 3, 12, 0);
 
@@ -58,5 +58,10 @@ describe('filterState', () => {
 		expect(needsEntity({ ...base, entityType: 'customer' })).toBe(false);
 		expect(needsEntity({ ...base, entityType: 'addon_association', action: 'addon_association.created' })).toBe(false);
 		expect(needsEntity(base)).toBe(false);
+	});
+	it("turns a type-only filter into that type's actions", () => {
+		expect(entityTypeQuery('customer')).toEqual({ actions: ['customer.created', 'customer.updated', 'customer.deleted'] });
+		expect(entityTypeQuery('')).toEqual({});
+		expect(entityTypeQuery('addon_association')).toEqual({});
 	});
 });

@@ -2,11 +2,11 @@ import { useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { Card, CardHeader, SearchableSelect, Toggle } from '@/components/atoms';
+import { Card, CardHeader, Select, Toggle } from '@/components/atoms';
 import { ActivityList } from '@/components/molecules/Activity';
-import useCustomerEntities from '@/hooks/useCustomerEntities';
+import { ANY, entityTypeQuery } from '@/components/molecules/Activity/filterState';
+import { ACTIVITY_CUSTOMER_ENTITY_TYPES } from '@/constants/activity';
 import { RouteNames } from '@/core/routes/Routes';
-import { ActivityScope } from '@/types/dto/ActivityLog';
 
 const HIDE_SYSTEM_KEY = 'activity.hideSystem';
 
@@ -18,21 +18,24 @@ const readHideSystem = () => {
 	}
 };
 
-export const scopeFromSelection = (selected: string, customerId: string): ActivityScope => {
-	if (!selected) return { kind: 'customer', customerId };
-	const idx = selected.indexOf(':');
-	return { kind: 'entity', entityType: selected.slice(0, idx), entityId: selected.slice(idx + 1) };
-};
-
 const CustomerActivityTab = () => {
 	const { t } = useTranslation('activity');
 	const { id } = useParams();
 	const customerId = id ?? '';
-	const [selected, setSelected] = useState('');
+	const [entityType, setEntityType] = useState('');
 	const [hideSystem, setHideSystem] = useState(readHideSystem);
-	const { options } = useCustomerEntities(customerId);
 
-	const query = useMemo(() => (hideSystem ? { exclude_actor_types: ['system'] } : {}), [hideSystem]);
+	const query = useMemo(
+		() => ({ ...entityTypeQuery(entityType), ...(hideSystem ? { exclude_actor_types: ['system'] } : {}) }),
+		[entityType, hideSystem],
+	);
+	const typeOptions = useMemo(
+		() => [
+			{ value: ANY, label: t('filters.allTypes') },
+			...ACTIVITY_CUSTOMER_ENTITY_TYPES.map((v) => ({ value: v, label: t(`entity.${v}`, { defaultValue: v.replace(/_/g, ' ') }) })),
+		],
+		[t],
+	);
 
 	const toggleHideSystem = (v: boolean) => {
 		setHideSystem(v);
@@ -42,8 +45,6 @@ const CustomerActivityTab = () => {
 			// per-viewer convenience only
 		}
 	};
-
-	const scope = scopeFromSelection(selected, customerId);
 
 	return (
 		<Card>
@@ -57,13 +58,13 @@ const CustomerActivityTab = () => {
 			/>
 			<div className='flex flex-wrap items-center justify-between gap-3 py-3'>
 				<div className='min-w-[260px]'>
-					<SearchableSelect options={options} value={selected} onChange={setSelected} placeholder={t('scope.allRelated')} />
+					<Select options={typeOptions} value={entityType || ANY} onChange={(v) => setEntityType(v === ANY ? '' : v)} />
 				</div>
 				<Toggle checked={hideSystem} onChange={toggleHideSystem} label={t('toggle.hideSystem')} />
 			</div>
 			<ActivityList
-				key={selected || 'all'}
-				scope={scope}
+				key={entityType || 'all'}
+				scope={{ kind: 'customer', customerId }}
 				query={query}
 				pageSize={25}
 				customerId={customerId}

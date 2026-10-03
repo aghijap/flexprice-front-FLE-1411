@@ -6,7 +6,7 @@ import ActivityApi from '@/api/ActivityApi';
 import CustomerApi from '@/api/CustomerApi';
 import WalletApi from '@/api/WalletApi';
 import InvoiceApi from '@/api/InvoiceApi';
-import CustomerActivityTab, { scopeFromSelection } from './CustomerActivityTab';
+import CustomerActivityTab from './CustomerActivityTab';
 
 vi.mock('react-i18next', () => ({
 	useTranslation: () => ({
@@ -23,18 +23,6 @@ const wrap = (ui: React.ReactNode) => (
 		</MemoryRouter>
 	</QueryClientProvider>
 );
-
-describe('scopeFromSelection', () => {
-	it('returns the customer scope when nothing is selected', () => {
-		expect(scopeFromSelection('', 'cust_1')).toEqual({ kind: 'customer', customerId: 'cust_1' });
-	});
-	it('returns an entity scope for a type:id selection', () => {
-		expect(scopeFromSelection('subscription:subs_1', 'cust_1')).toEqual({ kind: 'entity', entityType: 'subscription', entityId: 'subs_1' });
-	});
-	it('keeps colons in the id', () => {
-		expect(scopeFromSelection('wallet:wal:1', 'cust_1')).toEqual({ kind: 'entity', entityType: 'wallet', entityId: 'wal:1' });
-	});
-});
 
 describe('CustomerActivityTab', () => {
 	beforeEach(() => {
@@ -53,11 +41,13 @@ describe('CustomerActivityTab', () => {
 		expect(list.mock.calls[0][0].entity_type).toBeUndefined();
 	});
 
-	it('defaults the entity dropdown to All related and titles the card Activity', async () => {
+	it("offers one entity-type filter and does not load the customer's records for it", async () => {
 		vi.spyOn(ActivityApi, 'list').mockResolvedValue({ items: [], has_more: false });
 		render(wrap(<CustomerActivityTab />));
-		expect(await screen.findByText('scope.allRelated')).toBeInTheDocument();
+		expect(await screen.findByText('filters.allTypes')).toBeInTheDocument();
 		expect(screen.getByText('tab.title')).toBeInTheDocument();
-		expect(screen.queryByText(/cust_…/)).not.toBeInTheDocument();
+		expect(CustomerApi.getCustomerSubscriptions).not.toHaveBeenCalled();
+		expect(WalletApi.getCustomerWallets).not.toHaveBeenCalled();
+		expect(InvoiceApi.listInvoices).not.toHaveBeenCalled();
 	});
 });

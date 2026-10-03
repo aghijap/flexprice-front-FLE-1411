@@ -109,16 +109,14 @@
 		"removeCustomer": "Remove customer filter",
 		"removeRequest": "Remove request filter",
 		"clear": "Clear",
-		"needEntity": "Paste an entity ID to see {{type}} activity."
+		"needEntity": "Paste an entity ID to see {{type}} activity.",
+		"allTypes": "All types"
 	},
 	"actor": {
 		"user": "User",
 		"api_key": "API key",
 		"system": "System",
 		"customer_portal": "Customer portal"
-	},
-	"scope": {
-		"allRelated": "All related"
 	},
 	"openInLog": "Open in activity log"
 }

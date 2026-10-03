@@ -48,6 +48,12 @@ export const withRange = (f: ActivityFilterState, start?: Date, end?: Date): Act
 export const actionsFor = (entityType: string, all: readonly string[]): string[] =>
 	entityType ? all.filter((a) => a.startsWith(`${entityType}.`)) : [...all];
 
+/** The query for "this entity type, any record": the API rejects entity_type alone, so it filters by the type's actions. */
+export const entityTypeQuery = (entityType: string): Partial<ActivityQuery> => {
+	const actions = entityType ? actionsFor(entityType, ACTIVITY_ACTIONS) : [];
+	return actions.length ? { actions } : {};
+};
+
 /** A type with no known actions can't be filtered type-only (the API needs entity_type + entity_id together). */
 export const needsEntity = (f: ActivityFilterState): boolean =>
 	!!f.entityType && !f.entityId && !f.action && actionsFor(f.entityType, ACTIVITY_ACTIONS).length === 0;
@@ -61,10 +67,7 @@ export const filtersToQuery = (f: ActivityFilterState): Partial<ActivityQuery> =
 	}
 	if (f.actorType) q.actor_type = f.actorType;
 	if (f.action) q.actions = [f.action];
-	else if (f.entityType && !f.entityId) {
-		const forType = actionsFor(f.entityType, ACTIVITY_ACTIONS);
-		if (forType.length) q.actions = forType;
-	}
+	else if (f.entityType && !f.entityId) Object.assign(q, entityTypeQuery(f.entityType));
 	if (f.start) q.start_time = f.start.toISOString();
 	if (f.end) q.end_time = f.end.toISOString();
 	if (f.customerId) q.customer_id = f.customerId;
