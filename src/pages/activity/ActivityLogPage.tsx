@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Page, Toggle } from '@/components/atoms';
 import { ActivityList } from '@/components/molecules/Activity';
 import ActivityFilterBar from '@/components/molecules/Activity/ActivityFilterBar';
-import { ActivityFilterState, defaultFilters, filtersToQuery } from '@/components/molecules/Activity/filterState';
+import { ActivityFilterState, defaultFilters, filtersToQuery, needsEntity } from '@/components/molecules/Activity/filterState';
 
 const HIDE_SYSTEM_KEY = 'activity.hideSystem';
 
@@ -45,7 +45,13 @@ const ActivityLogPage = () => {
 				<ActivityFilterBar value={filters} onChange={setFilters} onClear={() => setFilters(defaultFilters())} />
 				<Toggle checked={hideSystem} onChange={toggleHideSystem} label={t('toggle.hideSystem')} />
 			</div>
-			<ActivityList scope={{ kind: 'all' }} query={query} pageSize={50} />
+			{needsEntity(filters) ? (
+				<div className='text-sm text-content-muted py-6 text-center'>
+					{t('filters.needEntity', { type: t(`entity.${filters.entityType}`, { defaultValue: filters.entityType.replace(/_/g, ' ') }) })}
+				</div>
+			) : (
+				<ActivityList scope={{ kind: 'all' }} query={query} pageSize={50} />
+			)}
 		</Page>
 	);
 };

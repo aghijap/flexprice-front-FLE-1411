@@ -48,6 +48,10 @@ export const withRange = (f: ActivityFilterState, start?: Date, end?: Date): Act
 export const actionsFor = (entityType: string, all: readonly string[]): string[] =>
 	entityType ? all.filter((a) => a.startsWith(`${entityType}.`)) : [...all];
 
+/** A type with no known actions can't be filtered type-only (the API needs entity_type + entity_id together). */
+export const needsEntity = (f: ActivityFilterState): boolean =>
+	!!f.entityType && !f.entityId && !f.action && actionsFor(f.entityType, ACTIVITY_ACTIONS).length === 0;
+
 export const filtersToQuery = (f: ActivityFilterState): Partial<ActivityQuery> => {
 	const q: Partial<ActivityQuery> = {};
 	// The API rejects entity_type without entity_id (400), so a type-only filter becomes that type's actions.

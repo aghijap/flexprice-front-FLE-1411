@@ -105,7 +105,8 @@
 		"request": "Request",
 		"removeCustomer": "Remove customer filter",
 		"removeRequest": "Remove request filter",
-		"clear": "Clear"
+		"clear": "Clear",
+		"needEntity": "Paste an entity ID to see {{type}} activity."
 	},
 	"actor": {
 		"user": "User",

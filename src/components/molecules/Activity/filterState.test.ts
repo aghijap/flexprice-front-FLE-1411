@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionsFor, defaultFilters, filtersToQuery, withEntityType, withRange } from './filterState';
+import { actionsFor, defaultFilters, filtersToQuery, needsEntity, withEntityType, withRange } from './filterState';
 
 const now = new Date(2026, 9, 3, 12, 0);
 
@@ -50,5 +50,13 @@ describe('filterState', () => {
 		expect(q.entity_type).toBe('customer');
 		expect(q.entity_id).toBe('cust_1');
 		expect(q.actions).toBeUndefined();
+	});
+	it('asks for an entity when a type has no known actions to filter by', () => {
+		const base = defaultFilters({}, now);
+		expect(needsEntity({ ...base, entityType: 'addon_association' })).toBe(true);
+		expect(needsEntity({ ...base, entityType: 'addon_association', entityId: 'addon_assoc_1' })).toBe(false);
+		expect(needsEntity({ ...base, entityType: 'customer' })).toBe(false);
+		expect(needsEntity({ ...base, entityType: 'addon_association', action: 'addon_association.created' })).toBe(false);
+		expect(needsEntity(base)).toBe(false);
 	});
 });
