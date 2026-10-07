@@ -30,10 +30,8 @@ describe('useGlobalForexRates', () => {
 });
 
 describe('duplicatePairError', () => {
-	it('is true for a 409', () => {
+	it('is true only for a 409', () => {
 		expect(duplicatePairError(Object.assign(new Error('a tenant FX rate already exists'), { status: 409 }))).toBe(true);
-	});
-	it('is false for other statuses', () => {
 		expect(duplicatePairError(Object.assign(new Error('bad'), { status: 400 }))).toBe(false);
 	});
 });

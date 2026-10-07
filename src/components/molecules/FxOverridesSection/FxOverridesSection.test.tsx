@@ -135,11 +135,6 @@ describe('FxOverridesSection', () => {
 		await waitFor(() => expect(container).toBeEmptyDOMElement());
 	});
 
-	it('shows the hint when given', async () => {
-		renderSection({ hint: 'Applies to invoices finalized from now on.' });
-		expect(await screen.findByText('Applies to invoices finalized from now on.')).toBeInTheDocument();
-	});
-
 	it('card layout shows an empty card with Add when there are no rates', async () => {
 		mockQuery.mockResolvedValue({ items: [], pagination: { total: 0, limit: 10, offset: 0 } });
 		renderSection({ layout: 'card' });

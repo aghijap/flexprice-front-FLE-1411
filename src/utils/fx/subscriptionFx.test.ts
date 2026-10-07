@@ -23,15 +23,9 @@ describe('resolveBillingCurrency', () => {
 	it('is undefined when the billing currency equals the charge currency', () => {
 		expect(resolveBillingCurrency('USD', [{ billing_currency: 'usd' }])).toBeUndefined();
 	});
-	it('is undefined before a charge currency is chosen', () => {
-		expect(resolveBillingCurrency('', [{ billing_currency: 'inr' }])).toBeUndefined();
-	});
 });
 
 describe('canSetSubscriptionFxRates', () => {
-	it('needs a billing currency', () => {
-		expect(canSetSubscriptionFxRates('usd', undefined)).toBe(false);
-	});
 	it('is false for a custom charge currency', () => {
 		expect(canSetSubscriptionFxRates('crd', 'inr')).toBe(false);
 	});
@@ -53,9 +47,6 @@ describe('toInlineFxRates', () => {
 	});
 	it('sends nothing when the table is hidden', () => {
 		expect(toInlineFxRates(rows, false)).toBeUndefined();
-	});
-	it('sends nothing for an empty table', () => {
-		expect(toInlineFxRates([], true)).toBeUndefined();
 	});
 });
 

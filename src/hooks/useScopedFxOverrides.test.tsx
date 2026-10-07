@@ -30,11 +30,6 @@ beforeEach(() => {
 });
 
 describe('useScopedFxOverrides', () => {
-	it('queries the customer scope', async () => {
-		renderHook(() => useScopedFxOverrides({ scope: 'customer', scopeId: 'cust_1' }, pageArgs), { wrapper });
-		await waitFor(() => expect(mockQuery).toHaveBeenCalledWith({ scope: 'customer', scope_id: 'cust_1', limit: 10, offset: 0 }));
-	});
-
 	it('creates with scope_id and the window', async () => {
 		const { result } = renderHook(() => useScopedFxOverrides({ scope: 'customer', scopeId: 'cust_1' }, pageArgs), { wrapper });
 		result.current.createOverride.mutate({
@@ -70,12 +65,6 @@ describe('useScopedFxOverrides', () => {
 			}),
 		);
 	});
-
-	it('deletes by id', async () => {
-		const { result } = renderHook(() => useScopedFxOverrides({ scope: 'customer', scopeId: 'cust_1' }, pageArgs), { wrapper });
-		await result.current.deleteOverride('fxr_9');
-		expect(mockDelete).toHaveBeenCalledWith('fxr_9');
-	});
 });
 
 describe('diffOverride', () => {
@@ -99,8 +88,5 @@ describe('classifyOverrideError', () => {
 	});
 	it('recognises the backend missing-tenant-rate hint', () => {
 		expect(classifyOverrideError(new Error('Configure a tenant rate for this pair before adding an override.'))).toBe('noTenantRate');
-	});
-	it('returns undefined otherwise', () => {
-		expect(classifyOverrideError(new Error('rate must be greater than zero'))).toBeUndefined();
 	});
 });

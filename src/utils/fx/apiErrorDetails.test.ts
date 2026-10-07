@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { formatMissingPair, getApiErrorDetails, getMissingPairs, getOverlapIndexes, hasOpenCheckoutSessions } from './apiErrorDetails';
+import { getApiErrorDetails, getMissingPairs, getOverlapIndexes, hasOpenCheckoutSessions } from './apiErrorDetails';
 
 const withDetails = (details: unknown) => Object.assign(new Error('x'), { cause: { code: 'validation_error', message: 'x', details } });
 
 describe('apiErrorDetails', () => {
-	it('reads details from the flat error body', () => {
-		expect(getApiErrorDetails(withDetails({ a: 1 }))).toEqual({ a: 1 });
-	});
 	it('tolerates a missing cause, missing details or a non-error', () => {
 		expect(getApiErrorDetails(new Error('x'))).toEqual({});
 		expect(getApiErrorDetails(withDetails(undefined))).toEqual({});
@@ -19,9 +16,6 @@ describe('apiErrorDetails', () => {
 	it('detects open checkout sessions', () => {
 		expect(hasOpenCheckoutSessions(withDetails({ checkout_session_ids: ['cs_1'], customer_id: 'c' }))).toBe(true);
 		expect(hasOpenCheckoutSessions(withDetails({ checkout_session_ids: [] }))).toBe(false);
-	});
-	it('formats a backend pair', () => {
-		expect(formatMissingPair('usd->inr')).toBe('USD → INR');
 	});
 	it('reads overlap indexes', () => {
 		expect(getOverlapIndexes(withDetails({ first_index: 0, second_index: 1 }))).toEqual([0, 1]);

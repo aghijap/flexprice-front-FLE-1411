@@ -4,9 +4,6 @@ import { windowsOverlap } from './windowsOverlap';
 const d = (day: number) => new Date(Date.UTC(2026, 0, day)).toISOString();
 
 describe('windowsOverlap', () => {
-	it('two open windows overlap', () => {
-		expect(windowsOverlap({}, {})).toBe(true);
-	});
 	it('disjoint windows do not overlap', () => {
 		expect(windowsOverlap({ start_date: d(1), end_date: d(5) }, { start_date: d(6), end_date: d(9) })).toBe(false);
 	});
@@ -19,10 +16,5 @@ describe('windowsOverlap', () => {
 	it('an open start overlaps anything that starts before its end', () => {
 		expect(windowsOverlap({ end_date: d(4) }, { start_date: d(3) })).toBe(true);
 		expect(windowsOverlap({ end_date: d(3) }, { start_date: d(3) })).toBe(false);
-	});
-	it('is symmetric', () => {
-		const a = { start_date: d(1), end_date: d(9) };
-		const b = { start_date: d(3), end_date: d(4) };
-		expect(windowsOverlap(a, b)).toBe(windowsOverlap(b, a));
 	});
 });

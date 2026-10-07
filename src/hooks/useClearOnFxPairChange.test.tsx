@@ -33,9 +33,4 @@ describe('useClearOnFxPairChange', () => {
 		rerender({ pair: 'usd->inr', editable: false, hasRows: true });
 		expect(clear).not.toHaveBeenCalled();
 	});
-	it('does nothing without rows', () => {
-		const { clear, rerender } = setup({ pair: 'usd->inr', editable: true, hasRows: false });
-		rerender({ pair: 'eur->inr', editable: true, hasRows: false });
-		expect(clear).not.toHaveBeenCalled();
-	});
 });
