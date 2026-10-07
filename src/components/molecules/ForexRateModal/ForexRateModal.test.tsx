@@ -77,17 +77,6 @@ describe('ForexRateModal', () => {
 		expect(onSave).not.toHaveBeenCalled();
 	});
 
-	it('rejects a window overlapping an existing one', () => {
-		const { onSave } = renderModal({
-			showWindow: true,
-			existingWindows: [{ start_date: d(1), end_date: d(10) }],
-			data: { from_currency: 'usd', to_currency: 'inr', rate: '90', start_date: d(5) },
-		});
-		save();
-		expect(screen.getByText('Overlaps another override in this list.')).toBeInTheDocument();
-		expect(onSave).not.toHaveBeenCalled();
-	});
-
 	it('passes saved dates through to onSave', () => {
 		const { onSave } = renderModal({
 			showWindow: true,

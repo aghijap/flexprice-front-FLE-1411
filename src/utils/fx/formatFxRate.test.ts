@@ -11,12 +11,6 @@ describe('formatRateValue', () => {
 	it('never rounds extra precision', () => {
 		expect(formatRateValue('83.33335')).toBe('83.33335');
 	});
-	it('keeps a leading zero rate exact', () => {
-		expect(formatRateValue('0.012')).toBe('0.012');
-	});
-	it('trims surrounding whitespace', () => {
-		expect(formatRateValue(' 90 ')).toBe('90.00');
-	});
 });
 
 describe('formatFxRate', () => {

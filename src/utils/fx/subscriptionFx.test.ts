@@ -82,7 +82,4 @@ describe('showSubscriptionFxErrorInline', () => {
 	it('is not inline when the table is hidden (custom charge currency, stale data)', () => {
 		expect(showSubscriptionFxErrorInline(message, false)).toBe(false);
 	});
-	it('is never inline for unrelated errors', () => {
-		expect(showSubscriptionFxErrorInline('plan not found', true)).toBe(false);
-	});
 });

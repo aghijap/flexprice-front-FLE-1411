@@ -13,14 +13,9 @@ const setup = (initial: Props) => {
 };
 
 describe('useClearOnFxPairChange', () => {
-	it('clears rows when the charge currency changes the pair', () => {
+	it('clears rows when the pair changes (charge currency or billing customer)', () => {
 		const { clear, rerender } = setup({ pair: 'usd->inr', editable: true, hasRows: true });
 		rerender({ pair: 'eur->inr', editable: true, hasRows: true });
-		expect(clear).toHaveBeenCalledTimes(1);
-	});
-	it('clears rows when the billing customer changes the pair', () => {
-		const { clear, rerender } = setup({ pair: 'usd->inr', editable: true, hasRows: true });
-		rerender({ pair: 'usd->eur', editable: true, hasRows: true });
 		expect(clear).toHaveBeenCalledTimes(1);
 	});
 	it('clears rows when the table hides', () => {

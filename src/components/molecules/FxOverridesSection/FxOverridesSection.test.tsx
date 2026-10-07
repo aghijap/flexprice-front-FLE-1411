@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import toast from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
@@ -9,9 +10,9 @@ import settingsEn from '@/i18n/locales/en/settings.json';
 import commonEn from '@/i18n/locales/en/common.json';
 import { PAGINATION_PREFIX } from '@/hooks/usePagination';
 
-const { mockQuery, mockCan } = vi.hoisted(() => ({ mockQuery: vi.fn(), mockCan: vi.fn() }));
+const { mockQuery, mockCan, mockDelete } = vi.hoisted(() => ({ mockQuery: vi.fn(), mockCan: vi.fn(), mockDelete: vi.fn() }));
 vi.mock('@/api/FxRateApi', () => ({
-	default: { queryFxRates: mockQuery, createFxRate: vi.fn(), updateFxRate: vi.fn(), deleteFxRate: vi.fn() },
+	default: { queryFxRates: mockQuery, createFxRate: vi.fn(), updateFxRate: vi.fn(), deleteFxRate: mockDelete },
 }));
 vi.mock('@/hooks/useCurrentUserPermissions', () => ({
 	useCurrentUserPermissions: () => ({ can: mockCan, isSuperAdmin: false, roles: [], isLoading: false, isError: false }),
@@ -36,7 +37,7 @@ beforeAll(async () => {
 	testI18n = instance;
 });
 
-const row = (id: string, from: string, to: string, rate: string) => ({
+const row = (id: string, from: string, to: string, rate: string, start: string | null = null, end: string | null = null) => ({
 	id,
 	environment_id: 'env_1',
 	scope: 'subscription',
@@ -45,8 +46,8 @@ const row = (id: string, from: string, to: string, rate: string) => ({
 	to_currency: to,
 	rate,
 	source: 'fixed',
-	start_date: null,
-	end_date: null,
+	start_date: start,
+	end_date: end,
 	status: 'published',
 	created_at: '2026-01-01T00:00:00Z',
 	updated_at: '2026-01-01T00:00:00Z',
@@ -77,17 +78,41 @@ beforeEach(() => {
 });
 
 describe('FxOverridesSection', () => {
-	it('labels each row with its own stored pair', async () => {
+	it('labels each row with its own stored pair, open bounds and derived status', async () => {
+		mockQuery.mockResolvedValue({
+			items: [
+				row('a', 'usd', 'eur', '0.93'),
+				row('b', 'usd', 'inr', '84.5', '2999-01-01T00:00:00Z'),
+				row('c', 'usd', 'inr', '83', null, '2000-01-01T00:00:00Z'),
+			],
+			pagination: { total: 3, limit: 10, offset: 0 },
+		});
 		renderSection();
 		expect(await screen.findByText('1 USD = 0.93 EUR')).toBeInTheDocument();
+		expect(screen.getAllByText('Always').length).toBeGreaterThan(0);
+		expect(screen.getAllByText('No end').length).toBeGreaterThan(0);
+		expect(screen.getByText('Active')).toBeInTheDocument();
+		expect(screen.getByText('Scheduled')).toBeInTheDocument();
+		expect(screen.getByText('Expired')).toBeInTheDocument();
 	});
 
-	it('opens the dialog with the locked pair', async () => {
+	it('disables add without fxrate write', async () => {
+		mockCan.mockReturnValue(false);
 		renderSection();
 		await screen.findByText('1 USD = 0.93 EUR');
-		fireEvent.click(screen.getByRole('button', { name: /add override/i }));
-		await waitFor(() => expect(screen.getByText('USD → INR')).toBeInTheDocument());
-		expect(screen.queryByText('From currency')).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /add override/i })).toBeDisabled();
+	});
+
+	it('confirms a delete with a "deleted" toast, not "updated"', async () => {
+		mockDelete.mockReset().mockResolvedValue(undefined);
+		renderSection();
+		await screen.findByText('1 USD = 0.93 EUR');
+		fireEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+		await waitFor(() => fireEvent.click(screen.getByText('Delete')));
+		const confirm = await screen.findAllByRole('button', { name: /delete/i });
+		fireEvent.click(confirm[confirm.length - 1]);
+		await waitFor(() => expect(mockDelete).toHaveBeenCalledWith('a'));
+		await waitFor(() => expect(toast.success).toHaveBeenCalledWith('FX override deleted'));
 	});
 
 	it('hides add when nothing can be added', async () => {
@@ -113,13 +138,6 @@ describe('FxOverridesSection', () => {
 	it('shows the hint when given', async () => {
 		renderSection({ hint: 'Applies to invoices finalized from now on.' });
 		expect(await screen.findByText('Applies to invoices finalized from now on.')).toBeInTheDocument();
-	});
-
-	it('card layout matches Credit Grants: plain Add button in the card header', async () => {
-		renderSection({ layout: 'card' });
-		await screen.findByText('1 USD = 0.93 EUR');
-		expect(screen.getByRole('button', { name: /^add$/i })).toBeInTheDocument();
-		expect(screen.queryByRole('button', { name: /add override/i })).not.toBeInTheDocument();
 	});
 
 	it('card layout shows an empty card with Add when there are no rates', async () => {

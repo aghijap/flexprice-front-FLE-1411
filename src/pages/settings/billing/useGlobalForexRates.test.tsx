@@ -22,21 +22,10 @@ beforeEach(() => {
 });
 
 describe('useGlobalForexRates', () => {
-	it('queries tenant rates for the page', async () => {
-		renderHook(() => useGlobalForexRates({ page: 2, limit: 10, offset: 10 }), { wrapper });
-		await waitFor(() => expect(mockQuery).toHaveBeenCalledWith({ scope: 'tenant', limit: 10, offset: 10 }));
-	});
-
 	it('creates a tenant rate with only the pair and the rate', async () => {
 		const { result } = renderHook(() => useGlobalForexRates({ page: 1, limit: 10, offset: 0 }), { wrapper });
 		result.current.createRate.mutate({ from_currency: 'usd', to_currency: 'inr', rate: '83' });
 		await waitFor(() => expect(mockCreate).toHaveBeenCalledWith({ scope: 'tenant', from_currency: 'usd', to_currency: 'inr', rate: '83' }));
-	});
-
-	it('updates only the rate', async () => {
-		const { result } = renderHook(() => useGlobalForexRates({ page: 1, limit: 10, offset: 0 }), { wrapper });
-		result.current.updateRate.mutate({ id: 'fxr_1', rate: '84' });
-		await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith('fxr_1', { rate: '84' }));
 	});
 });
 

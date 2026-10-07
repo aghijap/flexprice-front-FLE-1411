@@ -1,5 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import toast from 'react-hot-toast';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
@@ -9,9 +8,9 @@ import customersEn from '@/i18n/locales/en/customers.json';
 import settingsEn from '@/i18n/locales/en/settings.json';
 import commonEn from '@/i18n/locales/en/common.json';
 
-const { mockQuery, mockCan, mockDelete } = vi.hoisted(() => ({ mockQuery: vi.fn(), mockCan: vi.fn(), mockDelete: vi.fn() }));
+const { mockQuery, mockCan } = vi.hoisted(() => ({ mockQuery: vi.fn(), mockCan: vi.fn() }));
 vi.mock('@/api/FxRateApi', () => ({
-	default: { queryFxRates: mockQuery, createFxRate: vi.fn(), updateFxRate: vi.fn(), deleteFxRate: mockDelete },
+	default: { queryFxRates: mockQuery, createFxRate: vi.fn(), updateFxRate: vi.fn(), deleteFxRate: vi.fn() },
 }));
 vi.mock('@/hooks/useCurrentUserPermissions', () => ({
 	useCurrentUserPermissions: () => ({ can: mockCan, isSuperAdmin: false, roles: [], isLoading: false, isError: false }),
@@ -72,52 +71,17 @@ beforeEach(() => {
 });
 
 describe('CustomerFxOverridesSection', () => {
-	it('renders rows with the rate, open bounds and derived status', async () => {
-		renderSection();
-		expect(await screen.findAllByText('1 USD = 84.50 INR')).toHaveLength(3);
-		expect(screen.getAllByText('Always').length).toBeGreaterThan(0);
-		expect(screen.getAllByText('No end').length).toBeGreaterThan(0);
-		expect(screen.getByText('Active')).toBeInTheDocument();
-		expect(screen.getByText('Scheduled')).toBeInTheDocument();
-		expect(screen.getByText('Expired')).toBeInTheDocument();
-	});
-
-	it('shows the empty state', async () => {
+	it('lists customer-scope overrides with a free pair and the customer empty text', async () => {
 		mockQuery.mockResolvedValue({ items: [], pagination: { total: 0, limit: 10, offset: 0 } });
 		renderSection();
 		expect(await screen.findByText('No FX overrides. This customer uses the global forex rates.')).toBeInTheDocument();
+		expect(mockQuery).toHaveBeenCalledWith({ scope: 'customer', scope_id: 'cust_1', limit: 10, offset: 0 });
 	});
 
-	it('disables add without fxrate write', async () => {
-		mockCan.mockReturnValue(false);
-		renderSection();
-		await screen.findAllByText('1 USD = 84.50 INR');
-		expect(screen.getByRole('button', { name: /add override/i })).toBeDisabled();
-	});
-
-	it('hides add on an archived customer', async () => {
+	it('is read-only on an archived customer', async () => {
 		renderSection(true);
 		await screen.findAllByText('1 USD = 84.50 INR');
 		expect(screen.queryByRole('button', { name: /add override/i })).not.toBeInTheDocument();
-	});
-
-	it('confirms a delete with a "deleted" toast, not "updated"', async () => {
-		mockDelete.mockReset().mockResolvedValue(undefined);
-		mockQuery.mockResolvedValue({ items: [row('a', null, null)], pagination: { total: 1, limit: 10, offset: 0 } });
-		renderSection();
-		await screen.findByText('1 USD = 84.50 INR');
-		fireEvent.click(screen.getByRole('button', { name: 'Row actions' }));
-		await waitFor(() => fireEvent.click(screen.getByText('Delete')));
-		const confirm = await screen.findAllByRole('button', { name: /delete/i });
-		fireEvent.click(confirm[confirm.length - 1]);
-		await waitFor(() => expect(mockDelete).toHaveBeenCalledWith('a'));
-		await waitFor(() => expect(toast.success).toHaveBeenCalledWith('FX override deleted'));
-	});
-
-	it('shows the rate without a separate Pair column', async () => {
-		renderSection();
-		await screen.findAllByText('1 USD = 84.50 INR');
-		expect(screen.queryByText('Pair')).not.toBeInTheDocument();
-		expect(screen.queryByText('USD → INR')).not.toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: 'Row actions' })).not.toBeInTheDocument();
 	});
 });

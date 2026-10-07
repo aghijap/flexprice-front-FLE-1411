@@ -104,12 +104,4 @@ describe('GlobalForexRatesSection', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 		await waitFor(() => expect(mockUpdate).toHaveBeenCalledWith('fxr_1', { rate: '84' }));
 	});
-
-	it('shows the rate without separate From / To columns', async () => {
-		renderSection();
-		await screen.findByText('1 USD = 83.00 INR');
-		expect(screen.queryByText('From')).not.toBeInTheDocument();
-		expect(screen.queryByText('To')).not.toBeInTheDocument();
-		expect(screen.getByText('Rate')).toBeInTheDocument();
-	});
 });
