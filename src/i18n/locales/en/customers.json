@@ -120,9 +120,7 @@
 			"postalCodePlaceholder": "Enter Postal Code",
 			"billingCurrency": "Billing Currency",
 			"billingCurrencyNone": "None (bill in the plan's currency)",
-			"billingCurrencyHint": "Invoices for subscriptions in another currency are converted to this currency when finalized. Issued invoices don't change.",
-			"billingCurrencyMissingPairs": "No exchange rate for {{pairs}}. Add a global rate in Settings › Billing or a customer FX override.",
-			"billingCurrencyOpenCheckout": "Complete or cancel the open checkout first."
+			"billingCurrencyHint": "Invoices for subscriptions in another currency are converted to this currency when finalized. Issued invoices don't change."
 		},
 		"validation": {
 			"externalIdRequired": "External ID is required",
@@ -377,8 +375,6 @@
 					"deleted": "FX override deleted"
 				},
 				"errors": {
-					"overlap": "Another {{pair}} override overlaps this period.",
-					"noTenantRate": "Add a global {{pair}} rate first.",
 					"openSettings": "Open Settings › Billing"
 				}
 			}

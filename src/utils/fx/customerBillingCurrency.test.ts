@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BILLING_CURRENCY_NONE, billingCurrencyPayload, classifyBillingCurrencyError } from './customerBillingCurrency';
+import { BILLING_CURRENCY_NONE, billingCurrencyPayload, isBillingCurrencyError } from './customerBillingCurrency';
 
 const withDetails = (message: string, details: unknown) => Object.assign(new Error(message), { cause: { message, details } });
 
@@ -22,25 +22,15 @@ describe('billingCurrencyPayload', () => {
 	});
 });
 
-describe('classifyBillingCurrencyError', () => {
-	it('missing pairs', () => {
-		const error = withDetails('Configure a rate or custom factor for each pair before setting this billing currency.', {
-			missing_pairs: ['usd->eur'],
-		});
-		expect(classifyBillingCurrencyError(error)).toEqual({ kind: 'missingPairs', pairs: ['usd->eur'] });
+describe('isBillingCurrencyError', () => {
+	it.each([
+		['missing_pairs', ['usd->eur']],
+		['checkout_session_ids', ['cs_1']],
+		['billing_currency', 'xyz'],
+	])('belongs under the field when details has %s', (key, value) => {
+		expect(isBillingCurrencyError(withDetails('backend message', { [key]: value }))).toBe(true);
 	});
-	it('open checkout', () => {
-		const error = withDetails('Complete or cancel the open checkout first.', { checkout_session_ids: ['cs_1'] });
-		expect(classifyBillingCurrencyError(error)).toEqual({ kind: 'openCheckout' });
-	});
-	it('invalid currency', () => {
-		const error = withDetails('Billing currency must be a supported fiat ISO currency.', { billing_currency: 'xyz' });
-		expect(classifyBillingCurrencyError(error)).toEqual({
-			kind: 'invalid',
-			message: 'Billing currency must be a supported fiat ISO currency.',
-		});
-	});
-	it('anything else is not a billing-currency error', () => {
-		expect(classifyBillingCurrencyError(new Error('Name is required'))).toBeUndefined();
+	it('never classifies by message text', () => {
+		expect(isBillingCurrencyError(new Error('Billing currency must be a supported fiat ISO currency.'))).toBe(false);
 	});
 });

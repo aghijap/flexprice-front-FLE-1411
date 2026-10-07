@@ -12,8 +12,7 @@ import { z } from 'zod';
 import { refetchQueries } from '@/core/services/tanstack/ReactQueryProvider';
 import { logger } from '@/utils/common/Logger';
 import { currencyOptions } from '@/constants/constants';
-import { formatMissingPair } from '@/utils/fx/apiErrorDetails';
-import { BILLING_CURRENCY_NONE, billingCurrencyPayload, classifyBillingCurrencyError } from '@/utils/fx/customerBillingCurrency';
+import { BILLING_CURRENCY_NONE, billingCurrencyPayload, isBillingCurrencyError } from '@/utils/fx/customerBillingCurrency';
 
 interface Props {
 	data?: Customer;
@@ -231,15 +230,8 @@ const CreateCustomerDrawer: FC<Props> = ({ data, onOpenChange, open, trigger }) 
 		},
 		onError: (error: Error) => {
 			logger.error(error);
-			const billingError = classifyBillingCurrencyError(error);
-			if (billingError) {
-				const message =
-					billingError.kind === 'missingPairs'
-						? t('form.billingFields.billingCurrencyMissingPairs', { pairs: billingError.pairs.map(formatMissingPair).join(', ') })
-						: billingError.kind === 'openCheckout'
-							? t('form.billingFields.billingCurrencyOpenCheckout')
-							: billingError.message;
-				setErrors((prev) => ({ ...prev, billing_currency: message }));
+			if (isBillingCurrencyError(error)) {
+				setErrors((prev) => ({ ...prev, billing_currency: error.message }));
 				updateUIState({ showBillingDetails: true });
 				return;
 			}

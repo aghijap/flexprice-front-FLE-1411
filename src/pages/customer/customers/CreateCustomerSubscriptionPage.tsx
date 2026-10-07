@@ -541,7 +541,7 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || t('subscriptionCreate.toast.error'));
-			if (showSubscriptionFxErrorInline(error.message, fxTableVisibleRef.current)) {
+			if (showSubscriptionFxErrorInline(error, fxTableVisibleRef.current)) {
 				setFxRatesError({ message: error.message, rows: getOverlapIndexes(error) });
 			}
 		},

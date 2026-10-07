@@ -13,7 +13,10 @@ vi.mock('@/api/FxRateApi', () => ({
 	default: { queryFxRates: mockQuery, createFxRate: mockCreate, updateFxRate: mockUpdate, deleteFxRate: mockDelete },
 }));
 
-import { classifyOverrideError, diffOverride, useScopedFxOverrides } from './useScopedFxOverrides';
+import { diffOverride, overrideErrorField, useScopedFxOverrides } from './useScopedFxOverrides';
+
+const backendError = (message: string, details?: Record<string, unknown>) =>
+	Object.assign(new Error(message), { cause: { message, details } });
 
 const wrapper = ({ children }: { children: ReactNode }) => (
 	<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
@@ -80,13 +83,18 @@ describe('diffOverride', () => {
 	});
 });
 
-describe('classifyOverrideError', () => {
-	it('recognises the backend overlap hint', () => {
-		expect(classifyOverrideError(new Error('Another override for this scope and currency pair covers an overlapping period.'))).toBe(
-			'overlap',
-		);
+describe('overrideErrorField', () => {
+	it('places an overlap under the dates (overlapping_fx_rate_ids)', () => {
+		expect(
+			overrideErrorField(backendError('Another USD → INR override overlaps this period.', { overlapping_fx_rate_ids: ['fxr_1'] })),
+		).toBe('window');
 	});
-	it('recognises the backend missing-tenant-rate hint', () => {
-		expect(classifyOverrideError(new Error('Configure a tenant rate for this pair before adding an override.'))).toBe('noTenantRate');
+	it('places a missing global rate under the pair (missing_pairs)', () => {
+		expect(
+			overrideErrorField(backendError('Add a global USD → INR rate before adding an override.', { missing_pairs: ['usd->inr'] })),
+		).toBe('pair');
+	});
+	it('never classifies by message text', () => {
+		expect(overrideErrorField(new Error('Another USD → INR override overlaps this period.'))).toBeUndefined();
 	});
 });

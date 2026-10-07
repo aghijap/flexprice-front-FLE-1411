@@ -1,9 +1,7 @@
-import { getMissingPairs, hasOpenCheckoutSessions } from './apiErrorDetails';
+import { hasErrorDetail } from './apiErrorDetails';
 
 /** Select value for "no billing currency"; Radix Select cannot hold ''. */
 export const BILLING_CURRENCY_NONE = '__none__';
-
-const INVALID_CURRENCY_HINT = 'Billing currency must be a supported fiat ISO currency.';
 
 /** The billing_currency part of a create/update payload. '' clears it on update. */
 export const billingCurrencyPayload = (
@@ -17,15 +15,7 @@ export const billingCurrencyPayload = (
 	return {};
 };
 
-export type BillingCurrencyError =
-	| { kind: 'missingPairs'; pairs: string[] }
-	| { kind: 'openCheckout' }
-	| { kind: 'invalid'; message: string };
+const BILLING_CURRENCY_DETAILS = ['missing_pairs', 'checkout_session_ids', 'billing_currency'];
 
-export const classifyBillingCurrencyError = (error: unknown): BillingCurrencyError | undefined => {
-	const pairs = getMissingPairs(error);
-	if (pairs.length > 0) return { kind: 'missingPairs', pairs };
-	if (hasOpenCheckoutSessions(error)) return { kind: 'openCheckout' };
-	if (error instanceof Error && error.message === INVALID_CURRENCY_HINT) return { kind: 'invalid', message: error.message };
-	return undefined;
-};
+/** A billing-currency rejection, shown as sent under the Billing Currency field. */
+export const isBillingCurrencyError = (error: unknown): boolean => BILLING_CURRENCY_DETAILS.some((key) => hasErrorDetail(error, key));

@@ -56,9 +56,7 @@ const GlobalForexRatesSection = () => {
 			},
 			onError: (error) => {
 				if (duplicatePairError(error)) {
-					setFieldErrors({
-						pair: t('billing.forexRates.errors.duplicate', { pair: formatFxPair(values.from_currency, values.to_currency) }),
-					});
+					setFieldErrors({ pair: error.message });
 					return;
 				}
 				toast.error(error.message);

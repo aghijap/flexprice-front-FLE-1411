@@ -10,9 +10,14 @@ import settingsEn from '@/i18n/locales/en/settings.json';
 import commonEn from '@/i18n/locales/en/common.json';
 import { PAGINATION_PREFIX } from '@/hooks/usePagination';
 
-const { mockQuery, mockCan, mockDelete } = vi.hoisted(() => ({ mockQuery: vi.fn(), mockCan: vi.fn(), mockDelete: vi.fn() }));
+const { mockQuery, mockCan, mockDelete, mockCreate } = vi.hoisted(() => ({
+	mockQuery: vi.fn(),
+	mockCan: vi.fn(),
+	mockDelete: vi.fn(),
+	mockCreate: vi.fn(),
+}));
 vi.mock('@/api/FxRateApi', () => ({
-	default: { queryFxRates: mockQuery, createFxRate: vi.fn(), updateFxRate: vi.fn(), deleteFxRate: mockDelete },
+	default: { queryFxRates: mockQuery, createFxRate: mockCreate, updateFxRate: vi.fn(), deleteFxRate: mockDelete },
 }));
 vi.mock('@/hooks/useCurrentUserPermissions', () => ({
 	useCurrentUserPermissions: () => ({ can: mockCan, isSuperAdmin: false, roles: [], isLoading: false, isError: false }),
@@ -140,5 +145,35 @@ describe('FxOverridesSection', () => {
 		renderSection({ layout: 'card' });
 		expect(await screen.findByText('Nothing here')).toBeInTheDocument();
 		expect(screen.getByRole('button', { name: /^add$/i })).toBeInTheDocument();
+	});
+
+	describe('renders the backend message where its details place it', () => {
+		const backendError = (message: string, details: Record<string, unknown>) =>
+			Object.assign(new Error(message), { cause: { message, details } });
+		const submitRate = async () => {
+			await screen.findByText('1 USD = 0.93 EUR');
+			fireEvent.click(screen.getByRole('button', { name: /add override/i }));
+			fireEvent.change(await screen.findByPlaceholderText('83.00'), { target: { value: '85' } });
+			fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+		};
+
+		it('an overlap, under the dates', async () => {
+			mockCreate
+				.mockReset()
+				.mockRejectedValue(backendError('Another USD → INR override overlaps this period.', { overlapping_fx_rate_ids: ['fxr_1'] }));
+			renderSection();
+			await submitRate();
+			expect(await screen.findByText('Another USD → INR override overlaps this period.')).toBeInTheDocument();
+		});
+
+		it('a missing global rate, under the pair with a link to Settings', async () => {
+			mockCreate
+				.mockReset()
+				.mockRejectedValue(backendError('Add a global USD → INR rate before adding an override.', { missing_pairs: ['usd->inr'] }));
+			renderSection();
+			await submitRate();
+			expect(await screen.findByText(/Add a global USD → INR rate before adding an override\./)).toBeInTheDocument();
+			expect(screen.getByRole('link', { name: 'Open Settings › Billing' })).toBeInTheDocument();
+		});
 	});
 });

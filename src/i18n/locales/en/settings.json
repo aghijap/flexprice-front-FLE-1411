@@ -308,9 +308,6 @@
 			"toast": {
 				"created": "Forex rate added",
 				"updated": "Forex rate updated"
-			},
-			"errors": {
-				"duplicate": "A rate for {{pair}} already exists. Edit it from the list."
 			}
 		}
 	},

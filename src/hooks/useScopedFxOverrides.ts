@@ -3,6 +3,7 @@ import FxRateApi from '@/api/FxRateApi';
 import type { ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import type { FxRateScope } from '@/models/FxRate';
 import type { UpdateFxRateRequest } from '@/types/dto/FxRate';
+import { hasErrorDetail } from '@/utils/fx/apiErrorDetails';
 
 /** First query-key element of every customer / subscription override list; refetch with this prefix. */
 export const FX_OVERRIDES_KEY = 'fx-overrides';
@@ -13,14 +14,10 @@ export interface FxOverrideOwner {
 	scopeId: string;
 }
 
-const OVERLAP_HINT = 'overlapping period';
-const NO_TENANT_RATE_HINT = 'Configure a tenant rate';
-
-/** Maps the backend's 400 hints for overrides to the field they belong to. */
-export const classifyOverrideError = (error: unknown): 'overlap' | 'noTenantRate' | undefined => {
-	if (!(error instanceof Error)) return undefined;
-	if (error.message.includes(OVERLAP_HINT)) return 'overlap';
-	if (error.message.includes(NO_TENANT_RATE_HINT)) return 'noTenantRate';
+/** Which form field a backend override error belongs under, from its details; the message itself is shown as sent. */
+export const overrideErrorField = (error: unknown): 'window' | 'pair' | undefined => {
+	if (hasErrorDetail(error, 'overlapping_fx_rate_ids')) return 'window';
+	if (hasErrorDetail(error, 'missing_pairs')) return 'pair';
 	return undefined;
 };
 

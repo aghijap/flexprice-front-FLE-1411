@@ -2,13 +2,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/utils/common/custom_currency', () => ({ isCustomCurrency: (code?: string | null) => code === 'crd' }));
 
-import {
-	canSetSubscriptionFxRates,
-	isSubscriptionFxError,
-	resolveBillingCurrency,
-	showSubscriptionFxErrorInline,
-	toInlineFxRates,
-} from './subscriptionFx';
+import { canSetSubscriptionFxRates, resolveBillingCurrency, showSubscriptionFxErrorInline, toInlineFxRates } from './subscriptionFx';
+
+const backendError = (message: string, details?: Record<string, unknown>) =>
+	Object.assign(new Error(message), { cause: { message, details } });
 
 describe('resolveBillingCurrency', () => {
 	it('uses the first present customer, like the backend uses the invoicing customer', () => {
@@ -50,27 +47,19 @@ describe('toInlineFxRates', () => {
 	});
 });
 
-describe('isSubscriptionFxError', () => {
-	it.each([
-		'Each fx_rates entry must cover a separate period.',
-		'fx_rates can only be set on a fiat subscription billed in another currency.',
-		'Configure a rate or custom factor for usd to inr before creating this subscription.',
-		'Provide a positive exchange rate for every fx_rates entry.',
-		'The start of a validity window must be before its end.',
-	])('recognises "%s"', (message) => {
-		expect(isSubscriptionFxError(message)).toBe(true);
-	});
-	it('ignores unrelated errors', () => {
-		expect(isSubscriptionFxError('plan not found')).toBe(false);
-	});
-});
-
 describe('showSubscriptionFxErrorInline', () => {
-	const message = 'Configure a rate or custom factor for crd to inr before creating this subscription.';
-	it('is inline only when the FX Overrides table is visible', () => {
-		expect(showSubscriptionFxErrorInline(message, true)).toBe(true);
+	const missing = backendError('No exchange rate for USD → SEK. Add a global rate or custom factor before creating this subscription.', {
+		missing_pairs: ['usd->sek'],
+	});
+	const overlap = backendError('Each fx_rates entry must cover a separate period.', { first_index: 0, second_index: 1 });
+	it('is inline next to a visible FX Overrides table for missing_pairs or overlapping rows', () => {
+		expect(showSubscriptionFxErrorInline(missing, true)).toBe(true);
+		expect(showSubscriptionFxErrorInline(overlap, true)).toBe(true);
 	});
 	it('is not inline when the table is hidden (custom charge currency, stale data)', () => {
-		expect(showSubscriptionFxErrorInline(message, false)).toBe(false);
+		expect(showSubscriptionFxErrorInline(missing, false)).toBe(false);
+	});
+	it('never classifies by message text', () => {
+		expect(showSubscriptionFxErrorInline(new Error('Each fx_rates entry must cover a separate period.'), true)).toBe(false);
 	});
 });

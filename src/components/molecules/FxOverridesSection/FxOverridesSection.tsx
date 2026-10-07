@@ -11,9 +11,9 @@ import usePagination, { PAGINATION_PREFIX } from '@/hooks/usePagination';
 import { getTypographyClass } from '@/lib/typography';
 import type { FxRate } from '@/models/FxRate';
 import { formatDateShort } from '@/utils/common/helper_functions';
-import { formatFxPair, formatFxRate } from '@/utils/fx/formatFxRate';
+import { formatFxRate } from '@/utils/fx/formatFxRate';
 import { getOverrideStatus, type OverrideStatus } from '@/utils/fx/overrideStatus';
-import { FX_OVERRIDES_KEY, type FxOverrideOwner, classifyOverrideError, useScopedFxOverrides } from '@/hooks/useScopedFxOverrides';
+import { FX_OVERRIDES_KEY, type FxOverrideOwner, overrideErrorField, useScopedFxOverrides } from '@/hooks/useScopedFxOverrides';
 
 const PAGE_SIZE = 10;
 
@@ -82,18 +82,18 @@ const FxOverridesSection = ({
 		setIsOpen(true);
 	};
 
-	const onError = (values: ForexRateFormValues) => (error: Error) => {
-		const pair = formatFxPair(values.from_currency, values.to_currency);
-		const kind = classifyOverrideError(error);
-		if (kind === 'overlap') {
-			setFieldErrors({ window: t('tabPanels.information.fxOverrides.errors.overlap', { pair }) });
+	// The backend sends a finished message; its details only decide where it goes.
+	const onError = (error: Error) => {
+		const field = overrideErrorField(error);
+		if (field === 'window') {
+			setFieldErrors({ window: error.message });
 			return;
 		}
-		if (kind === 'noTenantRate') {
+		if (field === 'pair') {
 			setFieldErrors({
 				pair: (
 					<>
-						{t('tabPanels.information.fxOverrides.errors.noTenantRate', { pair })}{' '}
+						{error.message}{' '}
 						<Link className='underline' to={`${RouteNames.settings}?tab=billing`}>
 							{t('tabPanels.information.fxOverrides.errors.openSettings')}
 						</Link>
@@ -112,10 +112,10 @@ const FxOverridesSection = ({
 			setIsOpen(false);
 		};
 		if (editing && editingValues) {
-			updateOverride.mutate({ id: editing.id, original: editingValues, values }, { onSuccess: done('updated'), onError: onError(values) });
+			updateOverride.mutate({ id: editing.id, original: editingValues, values }, { onSuccess: done('updated'), onError });
 			return;
 		}
-		createOverride.mutate(values, { onSuccess: done('created'), onError: onError(values) });
+		createOverride.mutate(values, { onSuccess: done('created'), onError });
 	};
 
 	const writeDenied = t('tabPanels.information.fxOverrides.writeDeniedTooltip');

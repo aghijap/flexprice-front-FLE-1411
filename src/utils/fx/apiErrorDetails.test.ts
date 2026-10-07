@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getApiErrorDetails, getMissingPairs, getOverlapIndexes, hasOpenCheckoutSessions } from './apiErrorDetails';
+import { getApiErrorDetails, getOverlapIndexes, hasErrorDetail } from './apiErrorDetails';
 
 const withDetails = (details: unknown) => Object.assign(new Error('x'), { cause: { code: 'validation_error', message: 'x', details } });
 
@@ -9,13 +9,10 @@ describe('apiErrorDetails', () => {
 		expect(getApiErrorDetails(withDetails(undefined))).toEqual({});
 		expect(getApiErrorDetails('boom')).toEqual({});
 	});
-	it('extracts missing pairs and ignores non-strings', () => {
-		expect(getMissingPairs(withDetails({ missing_pairs: ['usd->inr', 3, 'gbp->inr'] }))).toEqual(['usd->inr', 'gbp->inr']);
-		expect(getMissingPairs(withDetails({ missing_pairs: 'usd->inr' }))).toEqual([]);
-	});
-	it('detects open checkout sessions', () => {
-		expect(hasOpenCheckoutSessions(withDetails({ checkout_session_ids: ['cs_1'], customer_id: 'c' }))).toBe(true);
-		expect(hasOpenCheckoutSessions(withDetails({ checkout_session_ids: [] }))).toBe(false);
+	it('tells whether a detail is present', () => {
+		expect(hasErrorDetail(withDetails({ missing_pairs: ['usd->inr'] }), 'missing_pairs')).toBe(true);
+		expect(hasErrorDetail(withDetails({}), 'missing_pairs')).toBe(false);
+		expect(hasErrorDetail(new Error('x'), 'missing_pairs')).toBe(false);
 	});
 	it('reads overlap indexes', () => {
 		expect(getOverlapIndexes(withDetails({ first_index: 0, second_index: 1 }))).toEqual([0, 1]);

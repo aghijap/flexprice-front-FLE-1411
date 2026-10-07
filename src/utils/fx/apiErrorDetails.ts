@@ -9,22 +9,8 @@ export const getApiErrorDetails = (error: unknown): Record<string, unknown> => {
 	return details && typeof details === 'object' ? details : {};
 };
 
-export const getMissingPairs = (error: unknown): string[] => {
-	const pairs = getApiErrorDetails(error).missing_pairs;
-	return Array.isArray(pairs) ? pairs.filter((pair): pair is string => typeof pair === 'string') : [];
-};
-
-export const hasOpenCheckoutSessions = (error: unknown): boolean => {
-	const ids = getApiErrorDetails(error).checkout_session_ids;
-	return Array.isArray(ids) && ids.length > 0;
-};
-
-/** "usd->inr" → "USD → INR". */
-export const formatMissingPair = (pair: string): string =>
-	pair
-		.split('->')
-		.map((code) => code.toUpperCase())
-		.join(' → ');
+/** Whether the backend attached this detail; details, not message text, decide where an error is shown. */
+export const hasErrorDetail = (error: unknown, key: string): boolean => getApiErrorDetails(error)[key] !== undefined;
 
 export const getOverlapIndexes = (error: unknown): number[] => {
 	const details = getApiErrorDetails(error);
