@@ -14,7 +14,10 @@ class FxRateApi {
 	}
 
 	public static async queryFxRates(filter: FxRateFilter) {
-		return AxiosClient.post<ListFxRatesResponse, FxRateFilter>(`${this.baseUrl}/query`, { ...filter, filters: [FIXED_RATES_ONLY] });
+		return AxiosClient.post<ListFxRatesResponse, FxRateFilter>(`${this.baseUrl}/query`, {
+			...filter,
+			filters: [...(filter.filters ?? []), FIXED_RATES_ONLY],
+		});
 	}
 
 	public static async getFxRate(id: string) {
