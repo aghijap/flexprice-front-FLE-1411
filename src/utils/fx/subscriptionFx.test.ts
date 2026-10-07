@@ -2,7 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/utils/common/custom_currency', () => ({ isCustomCurrency: (code?: string | null) => code === 'crd' }));
 
-import { canSetSubscriptionFxRates, isSubscriptionFxError, resolveBillingCurrency, toInlineFxRates } from './subscriptionFx';
+import {
+	canSetSubscriptionFxRates,
+	isSubscriptionFxError,
+	resolveBillingCurrency,
+	showSubscriptionFxErrorInline,
+	toInlineFxRates,
+} from './subscriptionFx';
 
 describe('resolveBillingCurrency', () => {
 	it('uses the first present customer, like the backend uses the invoicing customer', () => {
@@ -65,5 +71,18 @@ describe('isSubscriptionFxError', () => {
 	});
 	it('ignores unrelated errors', () => {
 		expect(isSubscriptionFxError('plan not found')).toBe(false);
+	});
+});
+
+describe('showSubscriptionFxErrorInline', () => {
+	const message = 'Configure a rate or custom factor for crd to inr before creating this subscription.';
+	it('is inline only when the FX Overrides table is visible', () => {
+		expect(showSubscriptionFxErrorInline(message, true)).toBe(true);
+	});
+	it('is not inline when the table is hidden (custom charge currency, stale data)', () => {
+		expect(showSubscriptionFxErrorInline(message, false)).toBe(false);
+	});
+	it('is never inline for unrelated errors', () => {
+		expect(showSubscriptionFxErrorInline('plan not found', true)).toBe(false);
 	});
 });

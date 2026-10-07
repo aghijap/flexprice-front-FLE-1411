@@ -1,11 +1,16 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useLocation } from 'react-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import FxRateApi from '@/api/FxRateApi';
 import { getOverlapIndexes } from '@/utils/fx/apiErrorDetails';
-import { canSetSubscriptionFxRates, isSubscriptionFxError, resolveBillingCurrency, toInlineFxRates } from '@/utils/fx/subscriptionFx';
+import {
+	canSetSubscriptionFxRates,
+	resolveBillingCurrency,
+	showSubscriptionFxErrorInline,
+	toInlineFxRates,
+} from '@/utils/fx/subscriptionFx';
 
 import { Button, SelectOption } from '@/components/atoms';
 import { ApiDocsContent } from '@/components/molecules';
@@ -269,6 +274,7 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 
 	const [isDraft, setIsDraft] = useState(false);
 	const [fxRatesError, setFxRatesError] = useState<{ message: string; rows: number[] } | undefined>();
+	const fxTableVisibleRef = useRef(false);
 	const { data: customerTaxAssociations } = useQuery({
 		queryKey: ['customerTaxAssociations', effectiveCustomerId],
 		queryFn: async () => {
@@ -529,11 +535,10 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 			navigateAfterAction();
 		},
 		onError: (error: Error) => {
-			if (isSubscriptionFxError(error.message)) {
-				setFxRatesError({ message: error.message, rows: getOverlapIndexes(error) });
-				return;
-			}
 			toast.error(error.message || t('subscriptionCreate.toast.error'));
+			if (showSubscriptionFxErrorInline(error.message, fxTableVisibleRef.current)) {
+				setFxRatesError({ message: error.message, rows: getOverlapIndexes(error) });
+			}
 		},
 	});
 
@@ -822,7 +827,8 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 			selectedCustomer,
 			customerData,
 		]);
-		const fxRates = toInlineFxRates(subscriptionState.fxRates, canSetSubscriptionFxRates(sanitized.currency, billingCurrency));
+		fxTableVisibleRef.current = canSetSubscriptionFxRates(sanitized.currency, billingCurrency);
+		const fxRates = toInlineFxRates(subscriptionState.fxRates, fxTableVisibleRef.current);
 
 		const { invoicingCustomer, customerId: formCustomerId } = subscriptionState;
 

@@ -71,6 +71,7 @@ import { Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import SubscriptionFxRateTable from '@/components/molecules/SubscriptionFxRateTable';
 import { useTenantFxRate } from '@/hooks/useTenantFxRate';
+import { useClearOnFxPairChange } from '@/hooks/useClearOnFxPairChange';
 import { canSetSubscriptionFxRates, resolveBillingCurrency } from '@/utils/fx/subscriptionFx';
 
 const BillingAccordionInfoTooltip = ({ description, ariaLabel }: { description: string; ariaLabel: string }) => (
@@ -186,11 +187,10 @@ const SubscriptionForm = ({
 	const showFxOverrides = fxRatesAllowed && (!isDisabled || state.fxRates.length > 0);
 	const { data: tenantFxRate } = useTenantFxRate(fxRatesAllowed && !isDisabled ? state.currency : undefined, billingCurrency);
 
-	// Rows only apply to the current charge → billing pair; drop them once the table hides.
-	useEffect(() => {
-		if (isDisabled || fxRatesAllowed || state.fxRates.length === 0) return;
-		setState((prev) => ({ ...prev, fxRates: [] }));
-	}, [isDisabled, fxRatesAllowed, state.fxRates.length, setState]);
+	// Rows are valid only for the charge → billing pair they were entered for.
+	const fxPair = fxRatesAllowed ? `${state.currency.toLowerCase()}->${billingCurrency}` : undefined;
+	const clearFxRates = useCallback(() => setState((prev) => ({ ...prev, fxRates: [] })), [setState]);
+	useClearOnFxPairChange(fxPair, !isDisabled, state.fxRates.length > 0, clearFxRates);
 
 	// Split plan prices into what attaches by default (exact cadence + ONETIME) vs. what
 	// the user can opt into via the "Also available on this plan" section (compatible but

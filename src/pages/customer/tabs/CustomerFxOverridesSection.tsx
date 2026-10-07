@@ -128,8 +128,12 @@ const CustomerFxOverridesSection = ({ customerId, isArchived }: Props) => {
 							<ActionButton
 								id={row.id}
 								entityName={t('tabPanels.information.fxOverrides.entityName')}
-								deleteMutationFn={deleteOverride}
+								deleteMutationFn={async (id) => {
+									await deleteOverride(id);
+									toast.success(t('tabPanels.information.fxOverrides.toast.deleted'));
+								}}
 								refetchQueryKey={CUSTOMER_FX_OVERRIDES_KEY}
+								disableToast
 								edit={{ enabled: true, disabled: !canWrite, disabledReason: canWrite ? undefined : writeDenied, onClick: () => open(row) }}
 								archive={{
 									enabled: true,

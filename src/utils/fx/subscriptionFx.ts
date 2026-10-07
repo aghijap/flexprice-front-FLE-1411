@@ -30,3 +30,7 @@ const SUBSCRIPTION_FX_HINTS = ['fx_rates', 'Configure a rate or custom factor', 
 
 /** True for the subscription-create 400s that belong next to the FX Overrides table. */
 export const isSubscriptionFxError = (message: string): boolean => SUBSCRIPTION_FX_HINTS.some((hint) => message.includes(hint));
+
+/** Inline next to the FX Overrides table only while it is visible; otherwise the toast alone carries it. */
+export const showSubscriptionFxErrorInline = (message: string, tableVisible: boolean): boolean =>
+	tableVisible && isSubscriptionFxError(message);

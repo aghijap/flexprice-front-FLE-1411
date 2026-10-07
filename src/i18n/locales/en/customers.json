@@ -374,7 +374,8 @@
 				"delete": "Delete",
 				"toast": {
 					"created": "FX override added",
-					"updated": "FX override updated"
+					"updated": "FX override updated",
+					"deleted": "FX override deleted"
 				},
 				"errors": {
 					"overlap": "Another {{pair}} override for this customer overlaps this period.",

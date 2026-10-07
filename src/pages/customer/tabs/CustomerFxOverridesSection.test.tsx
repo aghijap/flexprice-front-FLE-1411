@@ -1,4 +1,5 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import toast from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router';
 import { I18nextProvider, initReactI18next } from 'react-i18next';
@@ -8,9 +9,9 @@ import customersEn from '@/i18n/locales/en/customers.json';
 import settingsEn from '@/i18n/locales/en/settings.json';
 import commonEn from '@/i18n/locales/en/common.json';
 
-const { mockQuery, mockCan } = vi.hoisted(() => ({ mockQuery: vi.fn(), mockCan: vi.fn() }));
+const { mockQuery, mockCan, mockDelete } = vi.hoisted(() => ({ mockQuery: vi.fn(), mockCan: vi.fn(), mockDelete: vi.fn() }));
 vi.mock('@/api/FxRateApi', () => ({
-	default: { queryFxRates: mockQuery, createFxRate: vi.fn(), updateFxRate: vi.fn(), deleteFxRate: vi.fn() },
+	default: { queryFxRates: mockQuery, createFxRate: vi.fn(), updateFxRate: vi.fn(), deleteFxRate: mockDelete },
 }));
 vi.mock('@/hooks/useCurrentUserPermissions', () => ({
 	useCurrentUserPermissions: () => ({ can: mockCan, isSuperAdmin: false, roles: [], isLoading: false, isError: false }),
@@ -98,5 +99,18 @@ describe('CustomerFxOverridesSection', () => {
 		renderSection(true);
 		await screen.findAllByText('1 USD = 84.50 INR');
 		expect(screen.queryByRole('button', { name: /add override/i })).not.toBeInTheDocument();
+	});
+
+	it('confirms a delete with a "deleted" toast, not "updated"', async () => {
+		mockDelete.mockReset().mockResolvedValue(undefined);
+		mockQuery.mockResolvedValue({ items: [row('a', null, null)], pagination: { total: 1, limit: 10, offset: 0 } });
+		renderSection();
+		await screen.findByText('1 USD = 84.50 INR');
+		fireEvent.click(screen.getByRole('button', { name: 'Row actions' }));
+		await waitFor(() => fireEvent.click(screen.getByText('Delete')));
+		const confirm = await screen.findAllByRole('button', { name: /delete/i });
+		fireEvent.click(confirm[confirm.length - 1]);
+		await waitFor(() => expect(mockDelete).toHaveBeenCalledWith('a'));
+		await waitFor(() => expect(toast.success).toHaveBeenCalledWith('FX override deleted'));
 	});
 });
