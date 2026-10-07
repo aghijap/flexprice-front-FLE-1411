@@ -81,9 +81,9 @@ describe('GlobalForexRatesSection', () => {
 		expect(await screen.findByText('No forex rates yet')).toBeInTheDocument();
 	});
 
-	it('pages with its own URL prefix', async () => {
+	it('pages 5 rates at a time with its own URL prefix', async () => {
 		renderSection('/settings?tab=billing&forex_rates_page=2');
-		await waitFor(() => expect(mockQuery).toHaveBeenCalledWith({ scope: 'tenant', limit: 10, offset: 10 }));
+		await waitFor(() => expect(mockQuery).toHaveBeenCalledWith({ scope: 'tenant', limit: 5, offset: 5 }));
 	});
 
 	it('disables add and edit without fxrate write', async () => {
