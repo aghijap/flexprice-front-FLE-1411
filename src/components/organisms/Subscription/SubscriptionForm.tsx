@@ -45,7 +45,7 @@ import { SubscriptionDiscountTable, EntitlementOverridesTable } from '@/componen
 import { DataType, FilterOperator } from '@/types/common/QueryBuilder';
 import SubscriptionTaxAssociationTable from '@/components/molecules/SubscriptionTaxAssociationTable';
 import PhaseList from './PhaseList';
-import { SubscriptionPhaseCreateRequest, EntitlementOverrideRequest } from '@/types/dto/Subscription';
+import { SubscriptionPhaseCreateRequest, EntitlementOverrideRequest, SubscriptionFxRatesError } from '@/types/dto/Subscription';
 import SubscriptionPriceTable from './SubscriptionPriceTable';
 import AddSubscriptionChargeDialog, { type AddedSubscriptionLineItem } from './AddSubscriptionChargeDialog';
 import type { LineItemCommitmentConfig } from '@/types/dto/LineItemCommitmentConfig';
@@ -176,7 +176,7 @@ const SubscriptionForm = ({
 		hint?: string;
 	};
 	/** Inline subscription-create 400 for fx_rates, with the offending row indexes. */
-	fxRatesError?: { message: string; rows: number[] };
+	fxRatesError?: SubscriptionFxRatesError;
 }) => {
 	const { t } = useTranslation(['customers', 'common']);
 	const isCustomerSelectionPending = !!customerPicker && !customerPicker.value;

@@ -342,6 +342,13 @@ export interface InlineFxRateRequest {
 	end_date?: string;
 }
 
+/** A subscription-create 400 about fx_rates, shown next to the FX Overrides table. */
+export interface SubscriptionFxRatesError {
+	message: string;
+	/** Indexes of the overlapping fx_rates rows, when the backend names them. */
+	rows: number[];
+}
+
 /** A row in the create form's FX Overrides table; `id` is local only. */
 export interface SubscriptionFxRateRow extends InlineFxRateRequest {
 	id: string;

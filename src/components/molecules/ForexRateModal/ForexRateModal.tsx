@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, DateTimePicker, Input, Label, Select } from '@/components/atoms';
 import Dialog from '@/components/atoms/Dialog';
@@ -46,8 +46,8 @@ const WINDOW_FIELDS = ['start_date', 'end_date'] as const;
 
 const fiatOptions = currencyOptions.map((option) => ({ label: option.label, value: option.value.toLowerCase() }));
 
-const ForexRateModal = ({
-	isOpen,
+/** The form inside the dialog; mounted fresh on every open, so its state starts from the props. */
+const ForexRateForm = ({
 	onOpenChange,
 	data,
 	lockedFrom,
@@ -58,20 +58,16 @@ const ForexRateModal = ({
 	isSaving = false,
 	fieldErrors,
 	onSave,
-}: ForexRateModalProps) => {
+}: Omit<ForexRateModalProps, 'isOpen'>) => {
 	const { t } = useTranslation('settings');
 	const isEdit = !!data;
 	const pairLocked = isEdit || (!!lockedFrom && !!lockedTo);
 	const canClearDates = !isEdit || allowClearDates;
 
-	const [values, setValues] = useState<ForexRateFormValues>({ from_currency: '', to_currency: '', rate: '' });
+	const [values, setValues] = useState<ForexRateFormValues>(
+		() => data ?? { from_currency: lockedFrom ?? '', to_currency: lockedTo ?? '', rate: '' },
+	);
 	const [errors, setErrors] = useState<ForexRateFieldErrors>({});
-
-	useEffect(() => {
-		if (!isOpen) return;
-		setValues(data ?? { from_currency: lockedFrom ?? '', to_currency: lockedTo ?? '', rate: '' });
-		setErrors({});
-	}, [isOpen, data, lockedFrom, lockedTo]);
 
 	const toOptions = useMemo(() => fiatOptions.filter((option) => option.value !== values.from_currency), [values.from_currency]);
 	const trimmedRate = values.rate.trim();
@@ -113,12 +109,7 @@ const ForexRateModal = ({
 	const shown: ForexRateFieldErrors = { ...errors, ...fieldErrors };
 
 	return (
-		<Dialog
-			isOpen={isOpen}
-			showCloseButton={false}
-			onOpenChange={onOpenChange}
-			title={isEdit ? t('billing.forexRates.modal.titleEdit') : t('billing.forexRates.modal.titleAdd')}
-			className='sm:max-w-[520px]'>
+		<>
 			<div className='grid gap-4 mt-3'>
 				{pairLocked ? (
 					<div className='space-y-2'>
@@ -201,6 +192,20 @@ const ForexRateModal = ({
 					{t('billing.forexRates.modal.save')}
 				</Button>
 			</div>
+		</>
+	);
+};
+
+const ForexRateModal = ({ isOpen, ...formProps }: ForexRateModalProps) => {
+	const { t } = useTranslation('settings');
+	return (
+		<Dialog
+			isOpen={isOpen}
+			showCloseButton={false}
+			onOpenChange={formProps.onOpenChange}
+			title={formProps.data ? t('billing.forexRates.modal.titleEdit') : t('billing.forexRates.modal.titleAdd')}
+			className='sm:max-w-[520px]'>
+			{isOpen ? <ForexRateForm {...formProps} /> : null}
 		</Dialog>
 	);
 };

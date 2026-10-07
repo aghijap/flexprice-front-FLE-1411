@@ -35,13 +35,14 @@ export const diffOverride = (original: ForexRateFormValues, next: ForexRateFormV
 	return update;
 };
 
-interface PageArgs {
+/** One page of a server-paginated FX rate list. */
+export interface FxPageArgs {
 	page: number;
 	limit: number;
 	offset: number;
 }
 
-export function useScopedFxOverrides({ scope, scopeId }: FxOverrideOwner, { page, limit, offset }: PageArgs) {
+export function useScopedFxOverrides({ scope, scopeId }: FxOverrideOwner, { page, limit, offset }: FxPageArgs) {
 	const queryClient = useQueryClient();
 
 	const query = useQuery({

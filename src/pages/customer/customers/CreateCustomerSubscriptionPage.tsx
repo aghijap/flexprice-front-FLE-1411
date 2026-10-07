@@ -49,7 +49,12 @@ import {
 	SubscriptionInheritanceConfig,
 } from '@/types/dto';
 import { FilterOperator, DataType } from '@/types/common/QueryBuilder';
-import { OverrideLineItemRequest, SubscriptionFxRateRow, SubscriptionPhaseCreateRequest } from '@/types/dto/Subscription';
+import {
+	OverrideLineItemRequest,
+	SubscriptionFxRateRow,
+	SubscriptionFxRatesError,
+	SubscriptionPhaseCreateRequest,
+} from '@/types/dto/Subscription';
 import type { AddedSubscriptionLineItem } from '@/components/organisms/Subscription/AddSubscriptionChargeDialog';
 
 import { cn } from '@/lib/utils';
@@ -273,7 +278,7 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 	const showCustomerPicker = !urlCustomerId;
 
 	const [isDraft, setIsDraft] = useState(false);
-	const [fxRatesError, setFxRatesError] = useState<{ message: string; rows: number[] } | undefined>();
+	const [fxRatesError, setFxRatesError] = useState<SubscriptionFxRatesError | undefined>();
 	const fxTableVisibleRef = useRef(false);
 	const { data: customerTaxAssociations } = useQuery({
 		queryKey: ['customerTaxAssociations', effectiveCustomerId],
