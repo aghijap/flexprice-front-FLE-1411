@@ -203,6 +203,10 @@ const CustomerInformationTab = () => {
 			label: 'Postal Code',
 			value: customer?.address_postal_code || '--',
 		},
+		{
+			label: t('overview.labels.billingCurrency'),
+			value: customer?.billing_currency ? customer.billing_currency.toUpperCase() : '--',
+		},
 	];
 
 	if (isLoading) {

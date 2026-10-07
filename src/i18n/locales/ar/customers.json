@@ -73,7 +73,8 @@
 			"taxTreatmentTaxable": "خاضع للضريبة",
 			"timezone": "المنطقة الزمنية",
 			"subscriptionAmount": "مبلغ الاشتراك",
-			"subscriptionStartDate": "تاريخ بدء الاشتراك"
+			"subscriptionStartDate": "تاريخ بدء الاشتراك",
+			"billingCurrency": "عملة الفوترة"
 		},
 		"customerCardSectionTitle": "تفاصيل العميل",
 		"customerCardSlug": "المعرّف",
@@ -112,7 +113,12 @@
 			"selectCity": "اختر المدينة",
 			"noCities": "لا توجد مدن متاحة",
 			"postalCode": "الرمز البريدي",
-			"postalCodePlaceholder": "أدخل الرمز البريدي"
+			"postalCodePlaceholder": "أدخل الرمز البريدي",
+			"billingCurrency": "عملة الفوترة",
+			"billingCurrencyNone": "لا شيء (الفوترة بعملة الخطة)",
+			"billingCurrencyHint": "تُحوَّل فواتير الاشتراكات بعملة أخرى إلى هذه العملة عند إصدارها. لا تتغير الفواتير الصادرة.",
+			"billingCurrencyMissingPairs": "لا يوجد سعر صرف لـ {{pairs}}. أضف سعرًا عامًا في الإعدادات › الفوترة أو تجاوزًا لسعر الصرف للعميل.",
+			"billingCurrencyOpenCheckout": "أكمل جلسة الدفع المفتوحة أو ألغها أولًا."
 		},
 		"validation": {
 			"externalIdRequired": "المعرّف الخارجي مطلوب",

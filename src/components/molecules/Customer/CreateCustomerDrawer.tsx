@@ -11,6 +11,9 @@ import { Country, State, City, IState } from 'country-state-city';
 import { z } from 'zod';
 import { refetchQueries } from '@/core/services/tanstack/ReactQueryProvider';
 import { logger } from '@/utils/common/Logger';
+import { currencyOptions } from '@/constants/constants';
+import { formatMissingPair } from '@/utils/fx/apiErrorDetails';
+import { BILLING_CURRENCY_NONE, billingCurrencyPayload, classifyBillingCurrencyError } from '@/utils/fx/customerBillingCurrency';
 
 interface Props {
 	data?: Customer;
@@ -119,6 +122,11 @@ const CreateCustomerDrawer: FC<Props> = ({ data, onOpenChange, open, trigger }) 
 				}))
 			: [];
 
+	const billingCurrencyOptions: SelectOption[] = [
+		{ label: t('form.billingFields.billingCurrencyNone'), value: BILLING_CURRENCY_NONE },
+		...currencyOptions.map((option) => ({ label: option.label, value: option.value.toLowerCase() })),
+	];
+
 	useEffect(() => {
 		if (!isEdit) {
 			setFormData((prev) => ({ ...prev, external_id: `cust-${prev.name?.toLowerCase().replace(/\s/g, '-') || ''}` }));
@@ -185,6 +193,7 @@ const CreateCustomerDrawer: FC<Props> = ({ data, onOpenChange, open, trigger }) 
 			address_postal_code: formData.address_postal_code || undefined,
 			address_country: formData.address_country || undefined,
 			tax_treatment: formData.tax_treatment || undefined,
+			...billingCurrencyPayload(data?.billing_currency, formData.billing_currency, isEdit),
 		};
 
 		// Remove undefined values
@@ -222,6 +231,18 @@ const CreateCustomerDrawer: FC<Props> = ({ data, onOpenChange, open, trigger }) 
 		},
 		onError: (error: Error) => {
 			logger.error(error);
+			const billingError = classifyBillingCurrencyError(error);
+			if (billingError) {
+				const message =
+					billingError.kind === 'missingPairs'
+						? t('form.billingFields.billingCurrencyMissingPairs', { pairs: billingError.pairs.map(formatMissingPair).join(', ') })
+						: billingError.kind === 'openCheckout'
+							? t('form.billingFields.billingCurrencyOpenCheckout')
+							: billingError.message;
+				setErrors((prev) => ({ ...prev, billing_currency: message }));
+				updateUIState({ showBillingDetails: true });
+				return;
+			}
 			toast.error(error.message || t('form.validation.failedToSave'));
 		},
 	});
@@ -362,6 +383,17 @@ const CreateCustomerDrawer: FC<Props> = ({ data, onOpenChange, open, trigger }) 
 									onChange={(e) => handleChange('address_postal_code', e)}
 									error={errors.address_postal_code}
 									maxLength={20}
+								/>
+								<Select
+									label={t('form.billingFields.billingCurrency')}
+									options={billingCurrencyOptions}
+									value={formData.billing_currency ?? BILLING_CURRENCY_NONE}
+									onChange={(value) => {
+										handleChange('billing_currency', value === BILLING_CURRENCY_NONE ? undefined : value);
+										setErrors((prev) => ({ ...prev, billing_currency: undefined }));
+									}}
+									description={t('form.billingFields.billingCurrencyHint')}
+									error={errors.billing_currency}
 								/>
 							</div>
 						</div>

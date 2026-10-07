@@ -73,7 +73,8 @@
 			"taxTreatmentTaxable": "Taxable",
 			"timezone": "Timezone",
 			"subscriptionAmount": "Subscription Amount",
-			"subscriptionStartDate": "Subscription Start Date"
+			"subscriptionStartDate": "Subscription Start Date",
+			"billingCurrency": "Billing Currency"
 		},
 		"customerCardSectionTitle": "Customer Details",
 		"customerCardSlug": "Slug",
@@ -116,7 +117,12 @@
 			"selectCity": "Select City",
 			"noCities": "No cities Available",
 			"postalCode": "Postal Code",
-			"postalCodePlaceholder": "Enter Postal Code"
+			"postalCodePlaceholder": "Enter Postal Code",
+			"billingCurrency": "Billing Currency",
+			"billingCurrencyNone": "None (bill in the plan's currency)",
+			"billingCurrencyHint": "Invoices for subscriptions in another currency are converted to this currency when finalized. Issued invoices don't change.",
+			"billingCurrencyMissingPairs": "No exchange rate for {{pairs}}. Add a global rate in Settings › Billing or a customer FX override.",
+			"billingCurrencyOpenCheckout": "Complete or cancel the open checkout first."
 		},
 		"validation": {
 			"externalIdRequired": "External ID is required",
