@@ -1,6 +1,5 @@
 import type { InlineFxRateRequest, SubscriptionFxRateRow } from '@/types/dto/Subscription';
 import { isCustomCurrency } from '@/utils/common/custom_currency';
-import { hasErrorDetail } from './apiErrorDetails';
 
 /**
  * Billing currency of the first present customer (invoicing customer, then picked, then page customer),
@@ -26,10 +25,3 @@ export const toInlineFxRates = (rows: SubscriptionFxRateRow[], visible: boolean)
 		...(end_date ? { end_date } : {}),
 	}));
 };
-
-/** Subscription-create 400s about fx_rates: a missing rate or overlapping rows, identified by their details. */
-const isSubscriptionFxError = (error: unknown): boolean => hasErrorDetail(error, 'missing_pairs') || hasErrorDetail(error, 'first_index');
-
-/** Inline next to the FX Overrides table only while it is visible; otherwise the toast alone carries it. */
-export const showSubscriptionFxErrorInline = (error: unknown, tableVisible: boolean): boolean =>
-	tableVisible && isSubscriptionFxError(error);

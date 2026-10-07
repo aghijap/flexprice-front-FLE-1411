@@ -7,7 +7,7 @@ const { mockQuery, mockCreate, mockUpdate } = vi.hoisted(() => ({ mockQuery: vi.
 vi.mock('@/api/FxRateApi', () => ({ default: { queryFxRates: mockQuery, createFxRate: mockCreate, updateFxRate: mockUpdate } }));
 vi.mock('@/hooks/useEnvironment', () => ({ default: () => ({ activeEnvironment: { id: 'env_1' } }) }));
 
-import { duplicatePairError, useGlobalForexRates } from './useGlobalForexRates';
+import { useGlobalForexRates } from './useGlobalForexRates';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
 	<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
@@ -26,12 +26,5 @@ describe('useGlobalForexRates', () => {
 		const { result } = renderHook(() => useGlobalForexRates({ page: 1, limit: 10, offset: 0 }), { wrapper });
 		result.current.createRate.mutate({ from_currency: 'usd', to_currency: 'inr', rate: '83' });
 		await waitFor(() => expect(mockCreate).toHaveBeenCalledWith({ scope: 'tenant', from_currency: 'usd', to_currency: 'inr', rate: '83' }));
-	});
-});
-
-describe('duplicatePairError', () => {
-	it('is true only for a 409', () => {
-		expect(duplicatePairError(Object.assign(new Error('a tenant FX rate already exists'), { status: 409 }))).toBe(true);
-		expect(duplicatePairError(Object.assign(new Error('bad'), { status: 400 }))).toBe(false);
 	});
 });

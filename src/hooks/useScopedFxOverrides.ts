@@ -3,7 +3,6 @@ import FxRateApi from '@/api/FxRateApi';
 import type { ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import type { FxRateScope } from '@/models/FxRate';
 import type { UpdateFxRateRequest } from '@/types/dto/FxRate';
-import { hasErrorDetail } from '@/utils/fx/apiErrorDetails';
 
 /** First query-key element of every customer / subscription override list; refetch with this prefix. */
 export const FX_OVERRIDES_KEY = 'fx-overrides';
@@ -13,13 +12,6 @@ export interface FxOverrideOwner {
 	scope: Exclude<FxRateScope, 'tenant'>;
 	scopeId: string;
 }
-
-/** Which form field a backend override error belongs under, from its details; the message itself is shown as sent. */
-export const overrideErrorField = (error: unknown): 'window' | 'pair' | undefined => {
-	if (hasErrorDetail(error, 'overlapping_fx_rate_ids')) return 'window';
-	if (hasErrorDetail(error, 'missing_pairs')) return 'pair';
-	return undefined;
-};
 
 const sameInstant = (a?: string, b?: string) => (a && b ? new Date(a).getTime() === new Date(b).getTime() : a === b);
 

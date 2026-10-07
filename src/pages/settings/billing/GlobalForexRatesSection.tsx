@@ -3,14 +3,14 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { ActionButton, AddButton, Card, CardHeader, Loader, ShortPagination, Tooltip } from '@/components/atoms';
 import FlexpriceTable, { type ColumnData } from '@/components/molecules/Table';
-import ForexRateModal, { type ForexRateFieldErrors, type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
+import ForexRateModal, { type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import { useCurrentUserPermissions } from '@/hooks/useCurrentUserPermissions';
 import usePagination, { PAGINATION_PREFIX } from '@/hooks/usePagination';
 import type { FxRate } from '@/models/FxRate';
 import { formatDateShort } from '@/utils/common/helper_functions';
 import { formatFxPair, formatFxRate } from '@/utils/fx/formatFxRate';
 import { FOREX_RATES_PAGE_SIZE } from '../constants';
-import { duplicatePairError, useGlobalForexRates } from './useGlobalForexRates';
+import { useGlobalForexRates } from './useGlobalForexRates';
 
 const GlobalForexRatesSection = () => {
 	const { t } = useTranslation(['settings', 'common']);
@@ -21,7 +21,6 @@ const GlobalForexRatesSection = () => {
 
 	const [isOpen, setIsOpen] = useState(false);
 	const [editing, setEditing] = useState<FxRate | null>(null);
-	const [fieldErrors, setFieldErrors] = useState<ForexRateFieldErrors>({});
 
 	const editingValues = useMemo<ForexRateFormValues | undefined>(
 		() => (editing ? { from_currency: editing.from_currency, to_currency: editing.to_currency, rate: editing.rate } : undefined),
@@ -30,12 +29,10 @@ const GlobalForexRatesSection = () => {
 
 	const open = (rate: FxRate | null) => {
 		setEditing(rate);
-		setFieldErrors({});
 		setIsOpen(true);
 	};
 
 	const handleSave = (values: ForexRateFormValues) => {
-		setFieldErrors({});
 		if (editing) {
 			updateRate.mutate(
 				{ id: editing.id, rate: values.rate },
@@ -54,13 +51,7 @@ const GlobalForexRatesSection = () => {
 				toast.success(t('billing.forexRates.toast.created'));
 				setIsOpen(false);
 			},
-			onError: (error) => {
-				if (duplicatePairError(error)) {
-					setFieldErrors({ pair: error.message });
-					return;
-				}
-				toast.error(error.message);
-			},
+			onError: (error) => toast.error(error.message),
 		});
 	};
 
@@ -133,7 +124,6 @@ const GlobalForexRatesSection = () => {
 				onOpenChange={setIsOpen}
 				data={editingValues}
 				isSaving={createRate.isPending || updateRate.isPending}
-				fieldErrors={fieldErrors}
 				onSave={handleSave}
 			/>
 		</Card>

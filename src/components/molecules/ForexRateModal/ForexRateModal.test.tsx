@@ -85,13 +85,4 @@ describe('ForexRateModal', () => {
 		save();
 		expect(onSave).toHaveBeenCalledWith({ from_currency: 'usd', to_currency: 'inr', rate: '90', start_date: d(1), end_date: d(5) });
 	});
-
-	it('renders caller field errors inline', () => {
-		renderModal({
-			lockedFrom: 'usd',
-			lockedTo: 'inr',
-			fieldErrors: { pair: 'A rate for USD → INR already exists. Edit it from the list.' },
-		});
-		expect(screen.getByText('A rate for USD → INR already exists. Edit it from the list.')).toBeInTheDocument();
-	});
 });

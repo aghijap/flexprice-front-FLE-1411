@@ -1,2 +1,2 @@
 export { default } from './ForexRateModal';
-export type { ForexRateFieldErrors, ForexRateFormValues, ForexRateModalProps } from './ForexRateModal';
+export type { ForexRateFormValues, ForexRateModalProps } from './ForexRateModal';

@@ -13,10 +13,7 @@ vi.mock('@/api/FxRateApi', () => ({
 	default: { queryFxRates: mockQuery, createFxRate: mockCreate, updateFxRate: mockUpdate, deleteFxRate: mockDelete },
 }));
 
-import { diffOverride, overrideErrorField, useScopedFxOverrides } from './useScopedFxOverrides';
-
-const backendError = (message: string, details?: Record<string, unknown>) =>
-	Object.assign(new Error(message), { cause: { message, details } });
+import { diffOverride, useScopedFxOverrides } from './useScopedFxOverrides';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
 	<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
@@ -80,21 +77,5 @@ describe('diffOverride', () => {
 	});
 	it('ignores the same instant written differently', () => {
 		expect(diffOverride(original, { ...original, start_date: '2026-01-01T00:00:00Z' })).toEqual({});
-	});
-});
-
-describe('overrideErrorField', () => {
-	it('places an overlap under the dates (overlapping_fx_rate_ids)', () => {
-		expect(
-			overrideErrorField(backendError('Another USD → INR override overlaps this period.', { overlapping_fx_rate_ids: ['fxr_1'] })),
-		).toBe('window');
-	});
-	it('places a missing global rate under the pair (missing_pairs)', () => {
-		expect(
-			overrideErrorField(backendError('Add a global USD → INR rate before adding an override.', { missing_pairs: ['usd->inr'] })),
-		).toBe('pair');
-	});
-	it('never classifies by message text', () => {
-		expect(overrideErrorField(new Error('Another USD → INR override overlaps this period.'))).toBeUndefined();
 	});
 });

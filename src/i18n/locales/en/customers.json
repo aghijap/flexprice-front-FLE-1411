@@ -373,9 +373,6 @@
 					"created": "FX override added",
 					"updated": "FX override updated",
 					"deleted": "FX override deleted"
-				},
-				"errors": {
-					"openSettings": "Open Settings › Billing"
 				}
 			}
 		},

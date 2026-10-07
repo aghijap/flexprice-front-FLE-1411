@@ -12,7 +12,7 @@ import { z } from 'zod';
 import { refetchQueries } from '@/core/services/tanstack/ReactQueryProvider';
 import { logger } from '@/utils/common/Logger';
 import { currencyOptions } from '@/constants/constants';
-import { BILLING_CURRENCY_NONE, billingCurrencyPayload, isBillingCurrencyError } from '@/utils/fx/customerBillingCurrency';
+import { BILLING_CURRENCY_NONE, billingCurrencyPayload } from '@/utils/fx/customerBillingCurrency';
 
 interface Props {
 	data?: Customer;
@@ -230,11 +230,6 @@ const CreateCustomerDrawer: FC<Props> = ({ data, onOpenChange, open, trigger }) 
 		},
 		onError: (error: Error) => {
 			logger.error(error);
-			if (isBillingCurrencyError(error)) {
-				setErrors((prev) => ({ ...prev, billing_currency: error.message }));
-				updateUIState({ showBillingDetails: true });
-				return;
-			}
 			toast.error(error.message || t('form.validation.failedToSave'));
 		},
 	});
@@ -380,12 +375,8 @@ const CreateCustomerDrawer: FC<Props> = ({ data, onOpenChange, open, trigger }) 
 									label={t('form.billingFields.billingCurrency')}
 									options={billingCurrencyOptions}
 									value={formData.billing_currency ?? BILLING_CURRENCY_NONE}
-									onChange={(value) => {
-										handleChange('billing_currency', value === BILLING_CURRENCY_NONE ? undefined : value);
-										setErrors((prev) => ({ ...prev, billing_currency: undefined }));
-									}}
+									onChange={(value) => handleChange('billing_currency', value === BILLING_CURRENCY_NONE ? undefined : value)}
 									description={t('form.billingFields.billingCurrencyHint')}
-									error={errors.billing_currency}
 								/>
 							</div>
 						</div>

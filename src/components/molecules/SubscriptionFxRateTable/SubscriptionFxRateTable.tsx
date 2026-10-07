@@ -24,8 +24,6 @@ interface SubscriptionFxRateTableProps {
 	billingCurrency: string;
 	/** undefined = not loaded yet, null = no global rate configured. */
 	tenantRate?: FxRate | null;
-	errorMessage?: string;
-	highlightedRows?: number[];
 }
 
 const SubscriptionFxRateTable = ({
@@ -35,8 +33,6 @@ const SubscriptionFxRateTable = ({
 	chargeCurrency,
 	billingCurrency,
 	tenantRate,
-	errorMessage,
-	highlightedRows = [],
 }: SubscriptionFxRateTableProps) => {
 	const { t } = useTranslation(['customers', 'common']);
 	const [isOpen, setIsOpen] = useState(false);
@@ -80,11 +76,7 @@ const SubscriptionFxRateTable = ({
 	const columns: ColumnData<SubscriptionFxRateRow>[] = [
 		{
 			title: t('organisms.subscriptionForm.fxOverrides.columns.rate'),
-			render: (row) => (
-				<span className={highlightedRows.includes(data.indexOf(row)) ? 'text-destructive font-medium' : undefined}>
-					{formatFxRate(chargeCurrency, billingCurrency, row.rate)}
-				</span>
-			),
+			render: (row) => formatFxRate(chargeCurrency, billingCurrency, row.rate),
 		},
 		{
 			title: t('organisms.subscriptionForm.fxOverrides.columns.validFrom'),
@@ -124,7 +116,6 @@ const SubscriptionFxRateTable = ({
 				<FormHeader className='mb-0' title={t('organisms.subscriptionForm.fxOverrides.title')} variant='sub-header' />
 				<AddButton onClick={() => open(null)} disabled={disabled} />
 			</div>
-			{errorMessage ? <p className='text-sm text-destructive'>{errorMessage}</p> : null}
 			<div className='rounded-[6px] border border-line-strong'>
 				<FlexpriceTable data={data} columns={columns} showEmptyRow />
 			</div>

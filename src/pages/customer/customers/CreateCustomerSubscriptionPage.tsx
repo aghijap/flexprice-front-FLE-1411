@@ -1,16 +1,10 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useLocation } from 'react-router';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import FxRateApi from '@/api/FxRateApi';
-import { getOverlapIndexes } from '@/utils/fx/apiErrorDetails';
-import {
-	canSetSubscriptionFxRates,
-	resolveBillingCurrency,
-	showSubscriptionFxErrorInline,
-	toInlineFxRates,
-} from '@/utils/fx/subscriptionFx';
+import { canSetSubscriptionFxRates, resolveBillingCurrency, toInlineFxRates } from '@/utils/fx/subscriptionFx';
 
 import { Button, SelectOption } from '@/components/atoms';
 import { ApiDocsContent } from '@/components/molecules';
@@ -49,12 +43,7 @@ import {
 	SubscriptionInheritanceConfig,
 } from '@/types/dto';
 import { FilterOperator, DataType } from '@/types/common/QueryBuilder';
-import {
-	OverrideLineItemRequest,
-	SubscriptionFxRateRow,
-	SubscriptionFxRatesError,
-	SubscriptionPhaseCreateRequest,
-} from '@/types/dto/Subscription';
+import { OverrideLineItemRequest, SubscriptionFxRateRow, SubscriptionPhaseCreateRequest } from '@/types/dto/Subscription';
 import type { AddedSubscriptionLineItem } from '@/components/organisms/Subscription/AddSubscriptionChargeDialog';
 
 import { cn } from '@/lib/utils';
@@ -278,8 +267,6 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 	const showCustomerPicker = !urlCustomerId;
 
 	const [isDraft, setIsDraft] = useState(false);
-	const [fxRatesError, setFxRatesError] = useState<SubscriptionFxRatesError | undefined>();
-	const fxTableVisibleRef = useRef(false);
 	const { data: customerTaxAssociations } = useQuery({
 		queryKey: ['customerTaxAssociations', effectiveCustomerId],
 		queryFn: async () => {
@@ -541,9 +528,6 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 		},
 		onError: (error: Error) => {
 			toast.error(error.message || t('subscriptionCreate.toast.error'));
-			if (showSubscriptionFxErrorInline(error, fxTableVisibleRef.current)) {
-				setFxRatesError({ message: error.message, rows: getOverlapIndexes(error) });
-			}
 		},
 	});
 
@@ -826,14 +810,12 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 
 		// Sanitize subscription data
 		const sanitized = sanitizeSubscriptionData();
-		setFxRatesError(undefined);
 		const billingCurrency = resolveBillingCurrency(sanitized.currency, [
 			subscriptionState.invoicingCustomer,
 			selectedCustomer,
 			customerData,
 		]);
-		fxTableVisibleRef.current = canSetSubscriptionFxRates(sanitized.currency, billingCurrency);
-		const fxRates = toInlineFxRates(subscriptionState.fxRates, fxTableVisibleRef.current);
+		const fxRates = toInlineFxRates(subscriptionState.fxRates, canSetSubscriptionFxRates(sanitized.currency, billingCurrency));
 
 		const { invoicingCustomer, customerId: formCustomerId } = subscriptionState;
 
@@ -963,7 +945,6 @@ const CreateCustomerSubscriptionPage: React.FC = () => {
 						}));
 					}}
 					allCoupons={allCouponsData}
-					fxRatesError={fxRatesError}
 					subscriberCustomer={customerData}
 					customerPicker={
 						showCustomerPicker

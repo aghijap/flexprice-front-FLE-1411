@@ -1,13 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FxRateApi from '@/api/FxRateApi';
 import type { ForexRateFormValues } from '@/components/molecules/ForexRateModal';
-import { getHttpStatus } from '@/core/axios/types';
 import useEnvironment from '@/hooks/useEnvironment';
 import type { FxPageArgs } from '@/hooks/useScopedFxOverrides';
 import { settingsQueryKeys } from '../queryKeys';
-
-/** The backend answers a second tenant rate for the same pair with 409. */
-export const duplicatePairError = (error: unknown): boolean => getHttpStatus(error) === 409;
 
 export function useGlobalForexRates({ page, limit, offset }: FxPageArgs) {
 	const queryClient = useQueryClient();

@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BILLING_CURRENCY_NONE, billingCurrencyPayload, isBillingCurrencyError } from './customerBillingCurrency';
-
-const withDetails = (message: string, details: unknown) => Object.assign(new Error(message), { cause: { message, details } });
+import { BILLING_CURRENCY_NONE, billingCurrencyPayload } from './customerBillingCurrency';
 
 describe('billingCurrencyPayload', () => {
 	it('create with a currency sends it lowercase', () => {
@@ -19,18 +17,5 @@ describe('billingCurrencyPayload', () => {
 	});
 	it('edit keeping a currency resends it', () => {
 		expect(billingCurrencyPayload('inr', 'inr', true)).toEqual({ billing_currency: 'inr' });
-	});
-});
-
-describe('isBillingCurrencyError', () => {
-	it.each([
-		['missing_pairs', ['usd->eur']],
-		['checkout_session_ids', ['cs_1']],
-		['billing_currency', 'xyz'],
-	])('belongs under the field when details has %s', (key, value) => {
-		expect(isBillingCurrencyError(withDetails('backend message', { [key]: value }))).toBe(true);
-	});
-	it('never classifies by message text', () => {
-		expect(isBillingCurrencyError(new Error('Billing currency must be a supported fiat ISO currency.'))).toBe(false);
 	});
 });

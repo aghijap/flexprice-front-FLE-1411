@@ -22,7 +22,6 @@ export interface FlatApiError {
 	code?: string;
 	message?: string;
 	http_status_code?: number;
-	details?: Record<string, unknown>;
 }
 
 /** True when the shared axios client rejected a 404 (e.g. DELETE with no saved setting row). */

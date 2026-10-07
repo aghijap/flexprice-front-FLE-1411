@@ -1,11 +1,9 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router';
 import { ActionButton, AddButton, Card, Chip, FormHeader, Loader, NoDataCard, ShortPagination, Tooltip } from '@/components/atoms';
 import FlexpriceTable, { type ColumnData } from '@/components/molecules/Table';
-import ForexRateModal, { type ForexRateFieldErrors, type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
-import { RouteNames } from '@/core/routes/Routes';
+import ForexRateModal, { type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import { useCurrentUserPermissions } from '@/hooks/useCurrentUserPermissions';
 import usePagination, { PAGINATION_PREFIX } from '@/hooks/usePagination';
 import { getTypographyClass } from '@/lib/typography';
@@ -13,7 +11,7 @@ import type { FxRate } from '@/models/FxRate';
 import { formatDateShort } from '@/utils/common/helper_functions';
 import { formatFxRate } from '@/utils/fx/formatFxRate';
 import { getOverrideStatus, type OverrideStatus } from '@/utils/fx/overrideStatus';
-import { FX_OVERRIDES_KEY, type FxOverrideOwner, overrideErrorField, useScopedFxOverrides } from '@/hooks/useScopedFxOverrides';
+import { FX_OVERRIDES_KEY, type FxOverrideOwner, useScopedFxOverrides } from '@/hooks/useScopedFxOverrides';
 
 const PAGE_SIZE = 10;
 
@@ -73,40 +71,16 @@ const FxOverridesSection = ({
 
 	const [isOpen, setIsOpen] = useState(false);
 	const [editing, setEditing] = useState<FxRate | null>(null);
-	const [fieldErrors, setFieldErrors] = useState<ForexRateFieldErrors>({});
 	const editingValues = useMemo(() => (editing ? toValues(editing) : undefined), [editing]);
 
 	const open = (rate: FxRate | null) => {
 		setEditing(rate);
-		setFieldErrors({});
 		setIsOpen(true);
 	};
 
-	// The backend sends a finished message; its details only decide where it goes.
-	const onError = (error: Error) => {
-		const field = overrideErrorField(error);
-		if (field === 'window') {
-			setFieldErrors({ window: error.message });
-			return;
-		}
-		if (field === 'pair') {
-			setFieldErrors({
-				pair: (
-					<>
-						{error.message}{' '}
-						<Link className='underline' to={`${RouteNames.settings}?tab=billing`}>
-							{t('tabPanels.information.fxOverrides.errors.openSettings')}
-						</Link>
-					</>
-				),
-			});
-			return;
-		}
-		toast.error(error.message);
-	};
+	const onError = (error: Error) => toast.error(error.message);
 
 	const handleSave = (values: ForexRateFormValues) => {
-		setFieldErrors({});
 		const done = (key: 'created' | 'updated') => () => {
 			toast.success(t(`tabPanels.information.fxOverrides.toast.${key}`));
 			setIsOpen(false);
@@ -214,7 +188,6 @@ const FxOverridesSection = ({
 			lockedTo={lockedTo}
 			showWindow
 			isSaving={createOverride.isPending || updateOverride.isPending}
-			fieldErrors={fieldErrors}
 			onSave={handleSave}
 		/>
 	);

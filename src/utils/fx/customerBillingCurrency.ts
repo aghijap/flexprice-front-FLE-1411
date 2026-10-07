@@ -1,5 +1,3 @@
-import { hasErrorDetail } from './apiErrorDetails';
-
 /** Select value for "no billing currency"; Radix Select cannot hold ''. */
 export const BILLING_CURRENCY_NONE = '__none__';
 
@@ -14,8 +12,3 @@ export const billingCurrencyPayload = (
 	if (isEdit && original) return { billing_currency: '' };
 	return {};
 };
-
-const BILLING_CURRENCY_DETAILS = ['missing_pairs', 'checkout_session_ids', 'billing_currency'];
-
-/** A billing-currency rejection, shown as sent under the Billing Currency field. */
-export const isBillingCurrencyError = (error: unknown): boolean => BILLING_CURRENCY_DETAILS.some((key) => hasErrorDetail(error, key));

@@ -1,4 +1,4 @@
-import { type ReactNode, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, DateTimePicker, Input, Label, Select } from '@/components/atoms';
 import Dialog from '@/components/atoms/Dialog';
@@ -14,10 +14,10 @@ export interface ForexRateFormValues {
 	end_date?: string;
 }
 
-export interface ForexRateFieldErrors {
-	pair?: ReactNode;
+interface ForexRateFieldErrors {
+	pair?: string;
 	rate?: string;
-	window?: ReactNode;
+	window?: string;
 }
 
 export interface ForexRateModalProps {
@@ -35,8 +35,6 @@ export interface ForexRateModalProps {
 	/** Other rows' windows; an overlapping window is rejected. */
 	existingWindows?: FxWindow[];
 	isSaving?: boolean;
-	/** Caller-mapped backend errors, shown inline. */
-	fieldErrors?: ForexRateFieldErrors;
 	onSave: (values: ForexRateFormValues) => void;
 }
 
@@ -56,7 +54,6 @@ const ForexRateForm = ({
 	allowClearDates = false,
 	existingWindows,
 	isSaving = false,
-	fieldErrors,
 	onSave,
 }: Omit<ForexRateModalProps, 'isOpen'>) => {
 	const { t } = useTranslation('settings');
@@ -106,8 +103,6 @@ const ForexRateForm = ({
 		setErrors((prev) => ({ ...prev, window: undefined }));
 	};
 
-	const shown: ForexRateFieldErrors = { ...errors, ...fieldErrors };
-
 	return (
 		<>
 			<div className='grid gap-4 mt-3'>
@@ -140,7 +135,7 @@ const ForexRateForm = ({
 						/>
 					</div>
 				)}
-				{shown.pair ? <p className='text-sm text-destructive'>{shown.pair}</p> : null}
+				{errors.pair ? <p className='text-sm text-destructive'>{errors.pair}</p> : null}
 
 				<Input
 					label={t('billing.forexRates.modal.rate')}
@@ -150,7 +145,7 @@ const ForexRateForm = ({
 						setValues((prev) => ({ ...prev, rate: value }));
 						setErrors((prev) => ({ ...prev, rate: undefined }));
 					}}
-					error={shown.rate}
+					error={errors.rate}
 				/>
 				{rateIsValid && values.from_currency && values.to_currency ? (
 					<p className='text-sm text-content-zinc-subtle'>{formatFxRate(values.from_currency, values.to_currency, trimmedRate)}</p>
@@ -180,7 +175,7 @@ const ForexRateForm = ({
 						<p className='text-xs text-content-zinc-subtle'>
 							{canClearDates ? t('billing.forexRates.modal.windowHint') : t('billing.forexRates.modal.editWindowHint')}
 						</p>
-						{shown.window ? <p className='text-sm text-destructive'>{shown.window}</p> : null}
+						{errors.window ? <p className='text-sm text-destructive'>{errors.window}</p> : null}
 					</div>
 				) : null}
 			</div>
