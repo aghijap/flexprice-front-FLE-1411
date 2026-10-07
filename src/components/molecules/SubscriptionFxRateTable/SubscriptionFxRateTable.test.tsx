@@ -103,4 +103,16 @@ describe('SubscriptionFxRateTable', () => {
 		renderTable({ disabled: true });
 		expect(screen.getByRole('button', { name: /add/i })).toBeDisabled();
 	});
+
+	it('shows the same Status column as customer overrides', () => {
+		renderTable({
+			data: [
+				{ id: 'r1', rate: '90' },
+				{ id: 'r2', rate: '95', start_date: '2999-01-01T00:00:00.000Z' },
+			],
+		});
+		expect(screen.getByText('Status')).toBeInTheDocument();
+		expect(screen.getByText('Active')).toBeInTheDocument();
+		expect(screen.getByText('Scheduled')).toBeInTheDocument();
+	});
 });

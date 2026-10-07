@@ -308,11 +308,8 @@
 			"paginationUnit": "أسعار",
 			"writeDeniedTooltip": "ليست لديك صلاحية لإدارة أسعار الصرف. اطلب الوصول من مسؤول المستأجر.",
 			"columns": {
-				"from": "من",
-				"to": "إلى",
 				"rate": "السعر",
-				"updated": "آخر تحديث",
-				"editAria": "تعديل سعر {{pair}}"
+				"updated": "آخر تحديث"
 			},
 			"toast": {
 				"created": "تمت إضافة سعر الصرف",

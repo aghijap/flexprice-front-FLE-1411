@@ -98,7 +98,6 @@ const CustomerFxOverridesSection = ({ customerId, isArchived }: Props) => {
 	const dateOr = (value: string | null | undefined, fallback: string) => (value ? formatDateShort(value) : fallback);
 
 	const columns: ColumnData<FxRate>[] = [
-		{ title: t('tabPanels.information.fxOverrides.columns.pair'), render: (row) => formatFxPair(row.from_currency, row.to_currency) },
 		{
 			title: t('tabPanels.information.fxOverrides.columns.rate'),
 			render: (row) => formatFxRate(row.from_currency, row.to_currency, row.rate),

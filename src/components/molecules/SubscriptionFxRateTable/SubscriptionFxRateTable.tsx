@@ -1,13 +1,20 @@
 import { uniqueId } from 'lodash';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActionButton, AddButton, FormHeader } from '@/components/atoms';
+import { ActionButton, AddButton, Chip, FormHeader } from '@/components/atoms';
 import FlexpriceTable, { type ColumnData } from '@/components/molecules/Table';
 import ForexRateModal, { type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import type { FxRate } from '@/models/FxRate';
 import type { SubscriptionFxRateRow } from '@/types/dto/Subscription';
 import { formatDateShort } from '@/utils/common/helper_functions';
 import { formatFxPair, formatFxRate } from '@/utils/fx/formatFxRate';
+import { getOverrideStatus, type OverrideStatus } from '@/utils/fx/overrideStatus';
+
+const STATUS_VARIANT: Record<OverrideStatus, 'success' | 'info' | 'default'> = {
+	active: 'success',
+	scheduled: 'info',
+	expired: 'default',
+};
 
 interface SubscriptionFxRateTableProps {
 	data: SubscriptionFxRateRow[];
@@ -86,6 +93,13 @@ const SubscriptionFxRateTable = ({
 		{
 			title: t('organisms.subscriptionForm.fxOverrides.columns.validUntil'),
 			render: (row) => (row.end_date ? formatDateShort(row.end_date) : t('organisms.subscriptionForm.fxOverrides.noEnd')),
+		},
+		{
+			title: t('tabPanels.information.fxOverrides.columns.status'),
+			render: (row) => {
+				const status = getOverrideStatus(row.start_date, row.end_date);
+				return <Chip variant={STATUS_VARIANT[status]} label={t(`tabPanels.information.fxOverrides.status.${status}`)} />;
+			},
 		},
 		{
 			fieldVariant: 'interactive',

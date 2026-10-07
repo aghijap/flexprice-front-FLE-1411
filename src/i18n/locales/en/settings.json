@@ -302,11 +302,8 @@
 			"paginationUnit": "rates",
 			"writeDeniedTooltip": "You don't have permission to manage forex rates. Ask a tenant admin for access.",
 			"columns": {
-				"from": "From",
-				"to": "To",
 				"rate": "Rate",
-				"updated": "Last updated",
-				"editAria": "Edit {{pair}} rate"
+				"updated": "Last updated"
 			},
 			"toast": {
 				"created": "Forex rate added",

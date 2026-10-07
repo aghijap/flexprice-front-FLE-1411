@@ -357,7 +357,6 @@
 				"paginationUnit": "overrides",
 				"writeDeniedTooltip": "You don't have permission to manage FX overrides. Ask a tenant admin for access.",
 				"columns": {
-					"pair": "Pair",
 					"rate": "Rate",
 					"validFrom": "Valid from",
 					"validUntil": "Valid until",

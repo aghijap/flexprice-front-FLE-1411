@@ -1,4 +1,5 @@
 import type { FxRate, FxRateScope } from '@/models/FxRate';
+import type { TypedBackendFilter } from '@/types/formatters/QueryBuilder';
 
 export interface CreateFxRateRequest {
 	scope: FxRateScope;
@@ -22,6 +23,7 @@ export interface FxRateFilter {
 	scope_id?: string;
 	from_currency?: string;
 	to_currency?: string;
+	filters?: TypedBackendFilter[];
 	limit: number;
 	offset: number;
 }

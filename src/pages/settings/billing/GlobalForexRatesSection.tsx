@@ -1,8 +1,7 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { Pencil } from 'lucide-react';
-import { AddButton, Button, Card, CardHeader, Loader, ShortPagination, Tooltip } from '@/components/atoms';
+import { ActionButton, AddButton, Card, CardHeader, Loader, ShortPagination, Tooltip } from '@/components/atoms';
 import FlexpriceTable, { type ColumnData } from '@/components/molecules/Table';
 import ForexRateModal, { type ForexRateFieldErrors, type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import { useCurrentUserPermissions } from '@/hooks/useCurrentUserPermissions';
@@ -79,24 +78,26 @@ const GlobalForexRatesSection = () => {
 		);
 
 	const columns: ColumnData<FxRate>[] = [
-		{ title: t('billing.forexRates.columns.from'), render: (row) => row.from_currency.toUpperCase() },
-		{ title: t('billing.forexRates.columns.to'), render: (row) => row.to_currency.toUpperCase() },
 		{ title: t('billing.forexRates.columns.rate'), render: (row) => formatFxRate(row.from_currency, row.to_currency, row.rate) },
 		{ title: t('billing.forexRates.columns.updated'), render: (row) => formatDateShort(row.updated_at) },
 		{
 			fieldVariant: 'interactive',
-			align: 'right',
-			render: (row) =>
-				writeGate(
-					<Button
-						variant='ghost'
-						size='icon'
-						disabled={!canWrite}
-						aria-label={t('billing.forexRates.columns.editAria', { pair: formatFxPair(row.from_currency, row.to_currency) })}
-						onClick={() => open(row)}>
-						<Pencil className='size-4' />
-					</Button>,
-				),
+			hideOnEmpty: true,
+			render: (row) => (
+				<ActionButton
+					id={row.id}
+					entityName={formatFxPair(row.from_currency, row.to_currency)}
+					deleteMutationFn={async () => undefined}
+					refetchQueryKey='settings'
+					edit={{
+						enabled: true,
+						disabled: !canWrite,
+						disabledReason: canWrite ? undefined : t('billing.forexRates.writeDeniedTooltip'),
+						onClick: () => open(row),
+					}}
+					archive={{ enabled: false }}
+				/>
+			),
 		},
 	];
 

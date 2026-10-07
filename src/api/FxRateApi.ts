@@ -1,6 +1,10 @@
 import { AxiosClient } from '@/core/axios/verbs';
 import type { FxRate } from '@/models/FxRate';
+import { DataType, FilterOperator } from '@/types/common/QueryBuilder';
 import type { CreateFxRateRequest, FxRateFilter, ListFxRatesResponse, UpdateFxRateRequest } from '@/types/dto/FxRate';
+
+/** Market rates are stored but cannot be resolved yet, so every list shows fixed rates only. */
+const FIXED_RATES_ONLY = { field: 'source', operator: FilterOperator.EQUAL, data_type: DataType.STRING, value: { string: 'fixed' } };
 
 class FxRateApi {
 	private static baseUrl = '/forex';
@@ -10,7 +14,7 @@ class FxRateApi {
 	}
 
 	public static async queryFxRates(filter: FxRateFilter) {
-		return AxiosClient.post<ListFxRatesResponse, FxRateFilter>(`${this.baseUrl}/query`, filter);
+		return AxiosClient.post<ListFxRatesResponse, FxRateFilter>(`${this.baseUrl}/query`, { ...filter, filters: [FIXED_RATES_ONLY] });
 	}
 
 	public static async getFxRate(id: string) {

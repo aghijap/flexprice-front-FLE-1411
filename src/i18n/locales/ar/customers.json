@@ -352,7 +352,6 @@
 				"paginationUnit": "تجاوزات",
 				"writeDeniedTooltip": "ليست لديك صلاحية لإدارة تجاوزات سعر الصرف. اطلب الوصول من مسؤول المستأجر.",
 				"columns": {
-					"pair": "الزوج",
 					"rate": "السعر",
 					"validFrom": "صالح من",
 					"validUntil": "صالح حتى",

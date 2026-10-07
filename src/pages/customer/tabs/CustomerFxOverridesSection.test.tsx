@@ -113,4 +113,11 @@ describe('CustomerFxOverridesSection', () => {
 		await waitFor(() => expect(mockDelete).toHaveBeenCalledWith('a'));
 		await waitFor(() => expect(toast.success).toHaveBeenCalledWith('FX override deleted'));
 	});
+
+	it('shows the rate without a separate Pair column', async () => {
+		renderSection();
+		await screen.findAllByText('1 USD = 84.50 INR');
+		expect(screen.queryByText('Pair')).not.toBeInTheDocument();
+		expect(screen.queryByText('USD → INR')).not.toBeInTheDocument();
+	});
 });
