@@ -1,9 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import FxRateApi from '@/api/FxRateApi';
 import type { ForexRateFormValues } from '@/components/molecules/ForexRateModal';
+import type { FxRateScope } from '@/models/FxRate';
 import type { UpdateFxRateRequest } from '@/types/dto/FxRate';
 
-export const CUSTOMER_FX_OVERRIDES_KEY = 'customer-fx-overrides';
+/** First query-key element of every customer / subscription override list; refetch with this prefix. */
+export const FX_OVERRIDES_KEY = 'fx-overrides';
+
+/** The entity an override list belongs to. Tenant rates are listed by Settings › Billing instead. */
+export interface FxOverrideOwner {
+	scope: Exclude<FxRateScope, 'tenant'>;
+	scopeId: string;
+}
 
 const OVERLAP_HINT = 'overlapping period';
 const NO_TENANT_RATE_HINT = 'Configure a tenant rate';
@@ -33,22 +41,22 @@ interface PageArgs {
 	offset: number;
 }
 
-export function useCustomerFxOverrides(customerId: string, { page, limit, offset }: PageArgs) {
+export function useScopedFxOverrides({ scope, scopeId }: FxOverrideOwner, { page, limit, offset }: PageArgs) {
 	const queryClient = useQueryClient();
 
 	const query = useQuery({
-		queryKey: [CUSTOMER_FX_OVERRIDES_KEY, customerId, page],
-		queryFn: () => FxRateApi.queryFxRates({ scope: 'customer', scope_id: customerId, limit, offset }),
-		enabled: !!customerId,
+		queryKey: [FX_OVERRIDES_KEY, scope, scopeId, page],
+		queryFn: () => FxRateApi.queryFxRates({ scope, scope_id: scopeId, limit, offset }),
+		enabled: !!scopeId,
 	});
 
-	const invalidate = () => queryClient.invalidateQueries({ queryKey: [CUSTOMER_FX_OVERRIDES_KEY, customerId] });
+	const invalidate = () => queryClient.invalidateQueries({ queryKey: [FX_OVERRIDES_KEY, scope, scopeId] });
 
 	const createOverride = useMutation({
 		mutationFn: (values: ForexRateFormValues) =>
 			FxRateApi.createFxRate({
-				scope: 'customer',
-				scope_id: customerId,
+				scope,
+				scope_id: scopeId,
 				from_currency: values.from_currency,
 				to_currency: values.to_currency,
 				rate: values.rate,

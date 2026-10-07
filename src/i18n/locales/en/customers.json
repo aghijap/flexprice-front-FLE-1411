@@ -377,7 +377,7 @@
 					"deleted": "FX override deleted"
 				},
 				"errors": {
-					"overlap": "Another {{pair}} override for this customer overlaps this period.",
+					"overlap": "Another {{pair}} override overlaps this period.",
 					"noTenantRate": "Add a global {{pair}} rate first.",
 					"openSettings": "Open Settings › Billing"
 				}
@@ -671,6 +671,10 @@
 			"creditGrantDeleted": "Credit grant deleted successfully",
 			"creditGrantDeleteFailed": "Failed to delete credit grant",
 			"loadError": "Error loading subscription data"
+		},
+		"fxOverrides": {
+			"empty": "No FX overrides. Invoices use the customer's override or the global rate.",
+			"hint": "Changes apply to invoices finalized from now on. Issued invoices don't change."
 		}
 	}
 }

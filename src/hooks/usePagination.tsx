@@ -17,6 +17,7 @@ export enum PAGINATION_PREFIX {
 	TASK_RUNS = 'task_runs',
 	FOREX_RATES = 'forex_rates',
 	CUSTOMER_FX_OVERRIDES = 'customer_fx_overrides',
+	SUBSCRIPTION_FX_OVERRIDES = 'subscription_fx_overrides',
 }
 
 const usePagination = ({ initialLimit = 10, prefix }: UsePaginationProps = {}) => {

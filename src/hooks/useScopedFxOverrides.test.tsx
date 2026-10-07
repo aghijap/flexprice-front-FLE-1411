@@ -13,7 +13,7 @@ vi.mock('@/api/FxRateApi', () => ({
 	default: { queryFxRates: mockQuery, createFxRate: mockCreate, updateFxRate: mockUpdate, deleteFxRate: mockDelete },
 }));
 
-import { classifyOverrideError, diffOverride, useCustomerFxOverrides } from './useCustomerFxOverrides';
+import { classifyOverrideError, diffOverride, useScopedFxOverrides } from './useScopedFxOverrides';
 
 const wrapper = ({ children }: { children: ReactNode }) => (
 	<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}>
@@ -29,14 +29,14 @@ beforeEach(() => {
 	mockDelete.mockReset().mockResolvedValue(undefined);
 });
 
-describe('useCustomerFxOverrides', () => {
+describe('useScopedFxOverrides', () => {
 	it('queries the customer scope', async () => {
-		renderHook(() => useCustomerFxOverrides('cust_1', pageArgs), { wrapper });
+		renderHook(() => useScopedFxOverrides({ scope: 'customer', scopeId: 'cust_1' }, pageArgs), { wrapper });
 		await waitFor(() => expect(mockQuery).toHaveBeenCalledWith({ scope: 'customer', scope_id: 'cust_1', limit: 10, offset: 0 }));
 	});
 
 	it('creates with scope_id and the window', async () => {
-		const { result } = renderHook(() => useCustomerFxOverrides('cust_1', pageArgs), { wrapper });
+		const { result } = renderHook(() => useScopedFxOverrides({ scope: 'customer', scopeId: 'cust_1' }, pageArgs), { wrapper });
 		result.current.createOverride.mutate({
 			from_currency: 'usd',
 			to_currency: 'inr',
@@ -55,8 +55,24 @@ describe('useCustomerFxOverrides', () => {
 		);
 	});
 
+	it('queries and creates in the subscription scope', async () => {
+		const { result } = renderHook(() => useScopedFxOverrides({ scope: 'subscription', scopeId: 'subs_1' }, pageArgs), { wrapper });
+		await waitFor(() => expect(mockQuery).toHaveBeenCalledWith({ scope: 'subscription', scope_id: 'subs_1', limit: 10, offset: 0 }));
+		result.current.createOverride.mutate({ from_currency: 'usd', to_currency: 'inr', rate: '90', end_date: '2026-04-01T00:00:00.000Z' });
+		await waitFor(() =>
+			expect(mockCreate).toHaveBeenCalledWith({
+				scope: 'subscription',
+				scope_id: 'subs_1',
+				from_currency: 'usd',
+				to_currency: 'inr',
+				rate: '90',
+				end_date: '2026-04-01T00:00:00.000Z',
+			}),
+		);
+	});
+
 	it('deletes by id', async () => {
-		const { result } = renderHook(() => useCustomerFxOverrides('cust_1', pageArgs), { wrapper });
+		const { result } = renderHook(() => useScopedFxOverrides({ scope: 'customer', scopeId: 'cust_1' }, pageArgs), { wrapper });
 		await result.current.deleteOverride('fxr_9');
 		expect(mockDelete).toHaveBeenCalledWith('fxr_9');
 	});
