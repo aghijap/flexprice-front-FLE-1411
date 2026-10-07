@@ -65,7 +65,7 @@ beforeEach(() => {
 describe('SubscriptionEditFxOverridesSection', () => {
 	it('locks the pair to the subscription currency → the subscriber billing currency', async () => {
 		renderSection();
-		fireEvent.click(await screen.findByRole('button', { name: /add override/i }));
+		fireEvent.click(await screen.findByRole('button', { name: /^add$/i }));
 		await waitFor(() => expect(screen.getByText('USD → INR')).toBeInTheDocument());
 		expect(mockQuery).toHaveBeenCalledWith({ scope: 'subscription', scope_id: 'subs_1', limit: 10, offset: 0 });
 	});
@@ -73,7 +73,7 @@ describe('SubscriptionEditFxOverridesSection', () => {
 	it('uses the invoicing customer billing currency when it differs from the subscriber', async () => {
 		mockGetCustomer.mockResolvedValue({ id: 'cust_pay', billing_currency: 'eur' });
 		renderSection({ invoicingCustomerId: 'cust_pay' });
-		fireEvent.click(await screen.findByRole('button', { name: /add override/i }));
+		fireEvent.click(await screen.findByRole('button', { name: /^add$/i }));
 		await waitFor(() => expect(screen.getByText('USD → EUR')).toBeInTheDocument());
 		expect(mockGetCustomer).toHaveBeenCalledWith('cust_pay');
 	});

@@ -2,7 +2,7 @@ import { type ReactNode, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
-import { ActionButton, AddButton, Chip, Loader, ShortPagination, Tooltip } from '@/components/atoms';
+import { ActionButton, AddButton, Card, Chip, FormHeader, Loader, NoDataCard, ShortPagination, Tooltip } from '@/components/atoms';
 import FlexpriceTable, { type ColumnData } from '@/components/molecules/Table';
 import ForexRateModal, { type ForexRateFieldErrors, type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import { RouteNames } from '@/core/routes/Routes';
@@ -37,6 +37,8 @@ export interface FxOverridesSectionProps extends FxOverrideOwner {
 	/** Renders nothing while the list is empty and Add is unavailable. */
 	hideWhenEmpty?: boolean;
 	hint?: string;
+	/** 'card' matches the Edit Subscription sections (Credit Grants); 'inline' matches the customer Information tab. */
+	layout?: 'inline' | 'card';
 }
 
 const toValues = (rate: FxRate): ForexRateFormValues => ({
@@ -58,6 +60,7 @@ const FxOverridesSection = ({
 	lockedTo,
 	hideWhenEmpty = false,
 	hint,
+	layout = 'inline',
 }: FxOverridesSectionProps) => {
 	const { t } = useTranslation(['customers', 'common']);
 	const { can } = useCurrentUserPermissions();
@@ -167,58 +170,87 @@ const FxOverridesSection = ({
 				]),
 	];
 
+	// The card layout uses the plain "Add" button, like the other Edit Subscription sections.
+	const addLabel = layout === 'card' ? undefined : t('tabPanels.information.fxOverrides.add');
+	const addVariant = layout === 'card' ? undefined : 'outline';
 	const addButton: ReactNode = canWrite ? (
-		<AddButton variant='outline' label={t('tabPanels.information.fxOverrides.add')} onClick={() => open(null)} />
+		<AddButton variant={addVariant} label={addLabel} onClick={() => open(null)} />
 	) : (
 		<Tooltip content={writeDenied}>
 			<span tabIndex={0} className='inline-block'>
-				<AddButton variant='outline' label={t('tabPanels.information.fxOverrides.add')} disabled />
+				<AddButton variant={addVariant} label={addLabel} disabled />
 			</span>
 		</Tooltip>
+	);
+	const showAdd = !readOnly && canAdd;
+	const title = t('tabPanels.information.fxOverrides.title');
+
+	const body = isLoading ? (
+		<div className='flex min-h-[120px] items-center justify-center'>
+			<Loader />
+		</div>
+	) : isError ? (
+		<p className='text-sm text-destructive'>{t('tabPanels.information.fxOverrides.loadError')}</p>
+	) : overrides.length === 0 ? (
+		<p className='py-4 text-sm text-content-zinc-subtle'>{emptyText}</p>
+	) : (
+		<div className='space-y-4'>
+			<FlexpriceTable columns={columns} data={overrides} variant='no-bordered' />
+			<ShortPagination
+				unit={t('tabPanels.information.fxOverrides.paginationUnit')}
+				totalItems={total}
+				pageSize={limit}
+				prefix={paginationPrefix}
+			/>
+		</div>
+	);
+
+	const modal = (
+		<ForexRateModal
+			isOpen={isOpen}
+			onOpenChange={setIsOpen}
+			data={editingValues}
+			lockedFrom={lockedFrom}
+			lockedTo={lockedTo}
+			showWindow
+			isSaving={createOverride.isPending || updateOverride.isPending}
+			fieldErrors={fieldErrors}
+			onSave={handleSave}
+		/>
 	);
 
 	// Hidden while loading too, so a section with nothing to show never flashes in.
 	if (hideWhenEmpty && (readOnly || !canAdd) && (isLoading || (!isError && overrides.length === 0))) return null;
 
+	if (layout === 'card') {
+		return (
+			<>
+				{!isLoading && !isError && overrides.length === 0 ? (
+					<NoDataCard title={title} subtitle={emptyText} cta={showAdd ? addButton : undefined} />
+				) : (
+					<Card variant='notched'>
+						<div className='flex items-center justify-between mb-4'>
+							<FormHeader title={title} variant='sub-header' titleClassName='font-semibold' className='mb-0' />
+							{showAdd && addButton}
+						</div>
+						{hint ? <p className='text-xs text-content-zinc-subtle'>{hint}</p> : null}
+						<div className='mt-4'>{body}</div>
+					</Card>
+				)}
+				{modal}
+			</>
+		);
+	}
+
 	return (
 		<div className='mt-8'>
 			<div className='flex justify-between items-center mb-2'>
-				<h3 className={getTypographyClass('card-header') + '!text-[16px]'}>{t('tabPanels.information.fxOverrides.title')}</h3>
-				{!readOnly && canAdd && addButton}
+				<h3 className={getTypographyClass('card-header') + '!text-[16px]'}>{title}</h3>
+				{showAdd && addButton}
 			</div>
 			{hint ? <p className='mb-3 text-xs text-content-zinc-subtle'>{hint}</p> : null}
-			{isLoading ? (
-				<div className='flex min-h-[120px] items-center justify-center'>
-					<Loader />
-				</div>
-			) : isError ? (
-				<p className='text-sm text-destructive'>{t('tabPanels.information.fxOverrides.loadError')}</p>
-			) : overrides.length === 0 ? (
-				<p className='py-4 text-sm text-content-zinc-subtle'>{emptyText}</p>
-			) : (
-				<div className='space-y-4'>
-					<div className='rounded-[6px] border border-line-strong'>
-						<FlexpriceTable columns={columns} data={overrides} />
-					</div>
-					<ShortPagination
-						unit={t('tabPanels.information.fxOverrides.paginationUnit')}
-						totalItems={total}
-						pageSize={limit}
-						prefix={paginationPrefix}
-					/>
-				</div>
-			)}
-			<ForexRateModal
-				isOpen={isOpen}
-				onOpenChange={setIsOpen}
-				data={editingValues}
-				lockedFrom={lockedFrom}
-				lockedTo={lockedTo}
-				showWindow
-				isSaving={createOverride.isPending || updateOverride.isPending}
-				fieldErrors={fieldErrors}
-				onSave={handleSave}
-			/>
+			{body}
+			{modal}
 		</div>
 	);
 };

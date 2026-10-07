@@ -44,6 +44,7 @@ const SubscriptionEditFxOverridesSection = ({ subscriptionId, currency, customer
 			lockedFrom={canAdd ? currency : undefined}
 			lockedTo={billingCurrency}
 			hideWhenEmpty
+			layout='card'
 		/>
 	);
 };

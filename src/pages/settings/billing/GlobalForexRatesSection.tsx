@@ -121,9 +121,7 @@ const GlobalForexRatesSection = () => {
 				<p className='py-6 text-sm text-content-zinc-subtle'>{t('billing.forexRates.empty')}</p>
 			) : (
 				<div className='space-y-4'>
-					<div className='rounded-[6px] border border-line-strong'>
-						<FlexpriceTable columns={columns} data={rates} />
-					</div>
+					<FlexpriceTable columns={columns} data={rates} variant='no-bordered' />
 					<ShortPagination
 						unit={t('billing.forexRates.paginationUnit')}
 						totalItems={total}

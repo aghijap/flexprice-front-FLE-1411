@@ -114,4 +114,18 @@ describe('FxOverridesSection', () => {
 		renderSection({ hint: 'Applies to invoices finalized from now on.' });
 		expect(await screen.findByText('Applies to invoices finalized from now on.')).toBeInTheDocument();
 	});
+
+	it('card layout matches Credit Grants: plain Add button in the card header', async () => {
+		renderSection({ layout: 'card' });
+		await screen.findByText('1 USD = 0.93 EUR');
+		expect(screen.getByRole('button', { name: /^add$/i })).toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: /add override/i })).not.toBeInTheDocument();
+	});
+
+	it('card layout shows an empty card with Add when there are no rates', async () => {
+		mockQuery.mockResolvedValue({ items: [], pagination: { total: 0, limit: 10, offset: 0 } });
+		renderSection({ layout: 'card' });
+		expect(await screen.findByText('Nothing here')).toBeInTheDocument();
+		expect(screen.getByRole('button', { name: /^add$/i })).toBeInTheDocument();
+	});
 });
