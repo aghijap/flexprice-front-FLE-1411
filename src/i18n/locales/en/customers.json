@@ -342,7 +342,40 @@
 			"saveCardOnStripe": "Save Card on Stripe",
 			"setupAutopayMoyasar": "Setup Autopay",
 			"sharePortalLinkTitle": "Share Customer Portal Link",
-			"childCustomersTitle": "Child customers"
+			"childCustomersTitle": "Child customers",
+			"fxOverrides": {
+				"title": "FX Overrides",
+				"add": "Add override",
+				"empty": "No FX overrides. This customer uses the global forex rates.",
+				"loadError": "Could not load FX overrides.",
+				"paginationUnit": "overrides",
+				"writeDeniedTooltip": "You don't have permission to manage FX overrides. Ask a tenant admin for access.",
+				"columns": {
+					"pair": "Pair",
+					"rate": "Rate",
+					"validFrom": "Valid from",
+					"validUntil": "Valid until",
+					"status": "Status"
+				},
+				"always": "Always",
+				"noEnd": "No end",
+				"status": {
+					"active": "Active",
+					"scheduled": "Scheduled",
+					"expired": "Expired"
+				},
+				"entityName": "FX override",
+				"delete": "Delete",
+				"toast": {
+					"created": "FX override added",
+					"updated": "FX override updated"
+				},
+				"errors": {
+					"overlap": "Another {{pair}} override for this customer overlaps this period.",
+					"noTenantRate": "Add a global {{pair}} rate first.",
+					"openSettings": "Open Settings › Billing"
+				}
+			}
 		},
 		"invoice": {
 			"title": "Invoices",

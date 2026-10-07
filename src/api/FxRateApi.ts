@@ -20,6 +20,11 @@ class FxRateApi {
 	public static async updateFxRate(id: string, data: UpdateFxRateRequest) {
 		return AxiosClient.put<FxRate, UpdateFxRateRequest>(`${this.baseUrl}/${id}`, data);
 	}
+
+	/** Customer and subscription overrides only; the backend archives the row. */
+	public static async deleteFxRate(id: string): Promise<void> {
+		await AxiosClient.delete(`${this.baseUrl}/${id}`);
+	}
 }
 
 export default FxRateApi;
