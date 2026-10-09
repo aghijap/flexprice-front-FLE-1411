@@ -6,7 +6,7 @@ import FlexpriceTable, { type ColumnData } from '@/components/molecules/Table';
 import ForexRateModal, { type ForexRateFormValues } from '@/components/molecules/ForexRateModal';
 import type { FxRate } from '@/models/FxRate';
 import type { SubscriptionFxRateRow } from '@/types/dto/Subscription';
-import { formatDateShort } from '@/utils/common/helper_functions';
+import { formatDateTimeWithSecondsAndTimezone } from '@/utils/common/format_date';
 import { formatFxPair, formatFxRate } from '@/utils/fx/formatFxRate';
 import { getOverrideStatus, type OverrideStatus } from '@/utils/fx/overrideStatus';
 
@@ -80,11 +80,13 @@ const SubscriptionFxRateTable = ({
 		},
 		{
 			title: t('organisms.subscriptionForm.fxOverrides.columns.validFrom'),
-			render: (row) => (row.start_date ? formatDateShort(row.start_date) : t('organisms.subscriptionForm.fxOverrides.always')),
+			render: (row) =>
+				row.start_date ? formatDateTimeWithSecondsAndTimezone(row.start_date) : t('organisms.subscriptionForm.fxOverrides.always'),
 		},
 		{
 			title: t('organisms.subscriptionForm.fxOverrides.columns.validUntil'),
-			render: (row) => (row.end_date ? formatDateShort(row.end_date) : t('organisms.subscriptionForm.fxOverrides.noEnd')),
+			render: (row) =>
+				row.end_date ? formatDateTimeWithSecondsAndTimezone(row.end_date) : t('organisms.subscriptionForm.fxOverrides.noEnd'),
 		},
 		{
 			title: t('tabPanels.information.fxOverrides.columns.status'),

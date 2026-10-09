@@ -8,7 +8,7 @@ import { useCurrentUserPermissions } from '@/hooks/useCurrentUserPermissions';
 import usePagination, { PAGINATION_PREFIX } from '@/hooks/usePagination';
 import { getTypographyClass } from '@/lib/typography';
 import type { FxRate } from '@/models/FxRate';
-import { formatDateShort } from '@/utils/common/helper_functions';
+import { formatDateTimeWithSecondsAndTimezone } from '@/utils/common/format_date';
 import { formatFxRate } from '@/utils/fx/formatFxRate';
 import { getOverrideStatus, type OverrideStatus } from '@/utils/fx/overrideStatus';
 import { FX_OVERRIDES_KEY, type FxOverrideOwner, useScopedFxOverrides } from '@/hooks/useScopedFxOverrides';
@@ -93,7 +93,7 @@ const FxOverridesSection = ({
 	};
 
 	const writeDenied = t('tabPanels.information.fxOverrides.writeDeniedTooltip');
-	const dateOr = (value: string | null | undefined, fallback: string) => (value ? formatDateShort(value) : fallback);
+	const dateOr = (value: string | null | undefined, fallback: string) => (value ? formatDateTimeWithSecondsAndTimezone(value) : fallback);
 
 	const columns: ColumnData<FxRate>[] = [
 		{
